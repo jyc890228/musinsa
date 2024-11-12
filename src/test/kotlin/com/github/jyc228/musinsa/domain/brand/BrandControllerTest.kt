@@ -22,4 +22,11 @@ class BrandControllerTest : IntegrationTest() {
             client.updateBrand(newBrandId + 9999, "not exist brand updated")
         }
     }
+
+    @Test
+    fun `brand 를 삭제할 수 있다`() {
+        val newBrandId = client.createBrand("test2")
+        shouldNotThrowAny { client.deleteBrand(newBrandId) }
+        shouldThrow<MusinsaApiClient.ResponseException> { client.deleteBrand(newBrandId + 9999) }
+    }
 }

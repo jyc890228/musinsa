@@ -5,9 +5,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.delete
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
@@ -27,15 +29,20 @@ class MusinsaApiClient(url: String) {
         val response = http.post("/api/brands") {
             setBody(BrandController.UpsertBrandRequest(name))
         }
-        response.body<BrandController.BrandIdResponse>().id
+        response.throwIfFail().body<BrandController.BrandIdResponse>().id
     }
 
-    fun updateBrand(id: Long, name: String) = runBlocking {
-        val response = http.put("/api/brands/$id") {
+    fun updateBrand(id: Long, name: String): Unit = runBlocking {
+        http.put("/api/brands/$id") {
             setBody(BrandController.UpsertBrandRequest(name))
-        }
-        if (response.status.isSuccess()) return@runBlocking
-        throw ResponseException(response.status.value, response.body<MusinsaExceptionHandler.ErrorResponse>().message)
+        }.throwIfFail()
+    }
+
+    fun deleteBrand(id: Long): Unit = runBlocking { http.delete("/api/brands/$id").throwIfFail() }
+
+    private suspend fun HttpResponse.throwIfFail(): HttpResponse {
+        if (status.isSuccess()) return this
+        throw ResponseException(status.value, body<MusinsaExceptionHandler.ErrorResponse>().message)
     }
 
     class ResponseException(statusCode: Int, message: String) : RuntimeException("[$statusCode] $message")

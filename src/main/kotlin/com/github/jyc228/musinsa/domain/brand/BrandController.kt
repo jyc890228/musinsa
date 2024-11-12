@@ -1,5 +1,6 @@
 package com.github.jyc228.musinsa.domain.brand
 
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -20,6 +21,11 @@ class BrandController(private val service: BrandService) {
         @RequestBody request: UpsertBrandRequest
     ) {
         service.updateBrand(request, brandId)
+    }
+
+    @DeleteMapping("/api/brands/{brandId}")
+    fun deleteBrand(@PathVariable brandId: Long) {
+        service.deleteBrand(brandId)
     }
 
     data class UpsertBrandRequest(val name: String)

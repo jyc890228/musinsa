@@ -12,8 +12,10 @@ class BrandService(
     }
 
     fun updateBrand(request: BrandController.UpsertBrandRequest, id: Long) {
-        if (repository.updateNameById(request.name, id) == 0) {
-            throw BrandNotFoundException(id)
-        }
+        if (repository.updateNameById(request.name, id) == 0) throw BrandNotFoundException(id)
+    }
+
+    fun deleteBrand(id: Long) {
+        if (repository.removeById(id) == 0) throw BrandNotFoundException(id)
     }
 }

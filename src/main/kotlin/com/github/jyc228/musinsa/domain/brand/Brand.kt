@@ -29,4 +29,13 @@ interface BrandRepository : JpaRepository<BrandEntity, Long> {
     @Modifying
     @Query("""UPDATE BrandEntity e SET e.name = :name WHERE e.id = :id""")
     fun updateNameById(name: String, id: Long): Int
+
+    /**
+     * [deleteById] 는 select -> delete 이므로 쿼리 2번 수행
+     * BrandRepositoryTest 코드 참조
+     */
+    @Transactional
+    @Modifying
+    @Query("""DELETE BrandEntity e WHERE e.id = :id""")
+    fun removeById(id: Long): Int
 }
