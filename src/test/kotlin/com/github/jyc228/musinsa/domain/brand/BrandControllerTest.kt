@@ -1,22 +1,25 @@
 package com.github.jyc228.musinsa.domain.brand
 
 import com.github.jyc228.musinsa.IntegrationTest
+import com.github.jyc228.musinsa.MusinsaApiClient
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.longs.shouldBeGreaterThan
-import io.ktor.client.call.body
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
 class BrandControllerTest : IntegrationTest() {
 
     @Test
     fun `brand 를 등록할 수 있다`() {
-        runBlocking {
-            val response = client.post("/api/brands") {
-                setBody(BrandController.UpsertBrandRequest(name = "test"))
-            }
-            response.body<BrandController.BrandIdResponse>().id shouldBeGreaterThan 0
+        client.createBrand("test") shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun `brand 를 수정할 수 있다`() {
+        val newBrandId = client.createBrand("test2")
+        shouldNotThrowAny { client.updateBrand(newBrandId, "test2 updated") }
+        shouldThrow<MusinsaApiClient.ResponseException> {
+            client.updateBrand(newBrandId + 9999, "not exist brand updated")
         }
     }
 }

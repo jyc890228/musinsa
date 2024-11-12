@@ -7,7 +7,10 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
 
 @Entity
 @Table(name = "brand")
@@ -21,4 +24,9 @@ class BrandEntity(
 )
 
 @Repository
-interface BrandRepository : JpaRepository<BrandEntity, Long>
+interface BrandRepository : JpaRepository<BrandEntity, Long> {
+    @Transactional
+    @Modifying
+    @Query("""UPDATE BrandEntity e SET e.name = :name WHERE e.id = :id""")
+    fun updateNameById(name: String, id: Long): Int
+}
