@@ -23,3 +23,5 @@ create table if not exists product
 
     primary key (id)
 );
+
+create unique index if not exists idx__product__brand_id__category_id on product (brand_id, category_id);

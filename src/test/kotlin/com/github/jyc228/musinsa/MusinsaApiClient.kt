@@ -1,6 +1,7 @@
 package com.github.jyc228.musinsa
 
 import com.github.jyc228.musinsa.domain.brand.BrandController
+import com.github.jyc228.musinsa.domain.product.ProductController
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -14,6 +15,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
+import java.math.BigInteger
 import kotlinx.coroutines.runBlocking
 
 class MusinsaApiClient(url: String) {
@@ -39,6 +41,13 @@ class MusinsaApiClient(url: String) {
     }
 
     fun deleteBrand(id: Long): Unit = runBlocking { http.delete("/api/brands/$id").throwIfFail() }
+
+    fun createProduct(brandId: Long, categoryId: Long, price: BigInteger) = runBlocking {
+        val response = http.post("/api/products") {
+            setBody(ProductController.UpsertProductRequest(brandId, categoryId, price))
+        }
+        response.throwIfFail().body<ProductController.ProductIdResponse>().id
+    }
 
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {
         if (status.isSuccess()) return this

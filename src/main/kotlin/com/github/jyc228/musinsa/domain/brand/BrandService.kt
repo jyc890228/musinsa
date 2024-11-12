@@ -18,4 +18,8 @@ class BrandService(
     fun deleteBrand(id: Long) {
         if (repository.removeById(id) == 0) throw BrandNotFoundException(id)
     }
+
+    fun throwIfNotExist(id: Long) {
+        if (!repository.existsById(id)) throw BrandNotFoundException(id)
+    }
 }
