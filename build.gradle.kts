@@ -29,6 +29,12 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testImplementation("io.kotest:kotest-assertions-core:5.8.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    val ktorVersion = "3.0.0"
+    testImplementation("io.ktor:ktor-client-core:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    testImplementation("io.ktor:ktor-serialization-jackson:$ktorVersion")
 }
 
 kotlin {
