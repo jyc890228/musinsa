@@ -12,6 +12,7 @@ class MusinsaExceptionHandler {
     fun exceptionHandler(e: MusinsaException): ResponseEntity<ErrorResponse> = when (e) {
         is BrandNotFoundException -> HttpStatus.NOT_FOUND body "brand not found"
         is CategoryNotFoundException -> HttpStatus.NOT_FOUND body "category not found"
+        is ProductNotFoundException -> HttpStatus.NOT_FOUND body "product not found"
         is InvalidRequestException -> HttpStatus.BAD_REQUEST body "invalid parameter ${e.param}"
         is UpsertProductException -> HttpStatus.BAD_REQUEST body "create product failed. reason: ${exceptionHandler(e.cause).body?.message}"
     }

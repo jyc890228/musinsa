@@ -18,10 +18,10 @@ class ProductEntity(
     val id: Long = 0,
 
     @Column(name = "brand_id")
-    val brandId: Long,
+    var brandId: Long,
 
     @Column(name = "category_id")
-    val categoryId: Long,
+    var categoryId: Long,
 
     @Column(name = "price")
     var price: BigInteger,

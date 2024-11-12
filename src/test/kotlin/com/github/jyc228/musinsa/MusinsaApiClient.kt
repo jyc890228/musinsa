@@ -49,10 +49,16 @@ class MusinsaApiClient(url: String) {
         response.throwIfFail().body<ProductController.ProductIdResponse>().id
     }
 
+    fun updateProduct(id: Long, brandId: Long, categoryId: Long, price: BigInteger): Unit = runBlocking {
+        http.put("/api/products/$id") {
+            setBody(ProductController.UpsertProductRequest(brandId, categoryId, price))
+        }.throwIfFail()
+    }
+
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {
         if (status.isSuccess()) return this
         throw ResponseException(status.value, body<MusinsaExceptionHandler.ErrorResponse>().message)
     }
 
-    class ResponseException(statusCode: Int, message: String) : RuntimeException("[$statusCode] $message")
+    class ResponseException(val statusCode: Int, message: String) : RuntimeException("[$statusCode] $message")
 }
