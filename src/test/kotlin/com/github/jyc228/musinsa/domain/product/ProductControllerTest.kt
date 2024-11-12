@@ -30,4 +30,14 @@ class ProductControllerTest : IntegrationTest() {
             client.updateProduct(pid, brandId, 2, 0.toBigInteger())
         }.statusCode shouldBe 400
     }
+
+    @Test
+    fun `product 를 삭제할 수 있다`() {
+        val pid = client.createProduct(brandId, 5, 1000.toBigInteger())
+
+        shouldNotThrowAny { client.deleteProduct(pid) }
+        shouldThrow<MusinsaApiClient.ResponseException> {
+            client.deleteProduct(pid + 193)
+        }.statusCode shouldBe 404
+    }
 }

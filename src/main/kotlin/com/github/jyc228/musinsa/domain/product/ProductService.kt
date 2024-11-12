@@ -52,4 +52,8 @@ class ProductService(
         e.price = request.price
         repository.save(e)
     }
+
+    fun deleteProduct(pid: Long) {
+        if (repository.removeById(pid) == 0) throw ProductNotFoundException(pid)
+    }
 }

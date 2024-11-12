@@ -55,6 +55,8 @@ class MusinsaApiClient(url: String) {
         }.throwIfFail()
     }
 
+    fun deleteProduct(id: Long): Unit = runBlocking { http.delete("/api/products/$id").throwIfFail() }
+
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {
         if (status.isSuccess()) return this
         throw ResponseException(status.value, body<MusinsaExceptionHandler.ErrorResponse>().message)
