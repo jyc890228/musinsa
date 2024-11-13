@@ -8,7 +8,7 @@ create table if not exists brand
 
 create table if not exists category
 (
-    id   bigint       not null generated always as identity,
+    id   bigint       not null,
     name varchar(255) not null,
 
     primary key (id)
