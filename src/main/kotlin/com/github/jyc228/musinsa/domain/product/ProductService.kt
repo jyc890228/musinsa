@@ -5,6 +5,7 @@ import com.github.jyc228.musinsa.ProductNotFoundException
 import com.github.jyc228.musinsa.domain.brand.BrandService
 import com.github.jyc228.musinsa.domain.category.CategoryService
 import java.math.BigInteger
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -14,6 +15,7 @@ class ProductService(
     private val repository: ProductRepository,
     private val brandService: BrandService,
     private val categoryService: CategoryService,
+    private val app: ApplicationEventPublisher
 ) {
     @Transactional
     fun createProduct(request: ProductController.UpsertProductRequest): ProductEntity {
@@ -31,7 +33,7 @@ class ProductService(
                 categoryId = request.categoryId,
                 price = request.price
             )
-        )
+        ).also { app.publishEvent(ProductEvent.Created(it)) }
     }
 
     @Transactional
@@ -51,9 +53,11 @@ class ProductService(
         e.brandId = request.brandId
         e.price = request.price
         repository.save(e)
+        app.publishEvent(ProductEvent.Updated(e))
     }
 
     fun deleteProduct(pid: Long) {
         if (repository.removeById(pid) == 0) throw ProductNotFoundException(pid)
+        app.publishEvent(ProductEvent.Deleted(pid))
     }
 }

@@ -14,7 +14,7 @@ class ProductServiceTest {
     private val brandService: BrandService = mock()
     private val categoryService: CategoryService = mock()
 
-    private val service = ProductService(repository, brandService, categoryService)
+    private val service = ProductService(repository, brandService, categoryService, mock())
 
     @Test
     fun `가격이 0원 이하인 경우 상품 등록 실패`() {
