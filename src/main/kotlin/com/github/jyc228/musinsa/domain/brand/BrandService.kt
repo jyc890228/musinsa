@@ -22,4 +22,6 @@ class BrandService(
     fun throwIfNotExist(id: Long) {
         if (!repository.existsById(id)) throw BrandNotFoundException(id)
     }
+
+    fun findAllById(id: Set<Long>): List<BrandEntity> = repository.findAllById(id)
 }

@@ -2,11 +2,13 @@ package com.github.jyc228.musinsa
 
 import com.github.jyc228.musinsa.domain.brand.BrandController
 import com.github.jyc228.musinsa.domain.product.ProductController
+import com.github.jyc228.musinsa.domain.statistics.StatisticsController
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -56,6 +58,10 @@ class MusinsaApiClient(url: String) {
     }
 
     fun deleteProduct(id: Long): Unit = runBlocking { http.delete("/api/products/$id").throwIfFail() }
+
+    fun getCategoryCheaperProduct(): StatisticsController.CategoryCheaperProductResponse = runBlocking {
+        http.get("/api/statistics/category-cheaper-product").throwIfFail().body()
+    }
 
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {
         if (status.isSuccess()) return this

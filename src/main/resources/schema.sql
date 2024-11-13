@@ -25,3 +25,4 @@ create table if not exists product
 );
 
 create unique index if not exists idx__product__brand_id__category_id on product (brand_id, category_id);
+create index if not exists idx__product__category_id__price on product (category_id, price);
