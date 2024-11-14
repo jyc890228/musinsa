@@ -3,6 +3,8 @@ logging:
     root: info
 
 spring:
+  datasource:
+    url: jdbc:h2:mem:musinsa
   jpa:
     hibernate:
       ddl-auto: none
@@ -14,3 +16,6 @@ spring:
     init:
       schema-locations: classpath:schema.sql
       mode: always
+  h2:
+    console:
+      enabled: true

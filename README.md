@@ -22,6 +22,10 @@ integration test 는 [IntegrationTest.kt](src/test/kotlin/com/github/jyc228/musi
 
 http://localhost:8080/swagger-ui/index.html
 
+## h2-console
+
+http://localhost:8080/h2-console
+
 ## 구현
 
 api 실패 처리 : [MusinsaExceptionHandler.kt](src/main/kotlin/com/github/jyc228/musinsa/MusinsaExceptionHandler.kt)
