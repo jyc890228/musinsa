@@ -3,7 +3,7 @@ package com.github.jyc228.musinsa.domain.product
 import com.github.jyc228.musinsa.InvalidRequestException
 import com.github.jyc228.musinsa.ProductNotFoundException
 import com.github.jyc228.musinsa.domain.brand.BrandService
-import com.github.jyc228.musinsa.domain.category.CategoryService
+import com.github.jyc228.musinsa.domain.category.Category
 import java.math.BigInteger
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional
 class ProductService(
     private val repository: ProductRepository,
     private val brandService: BrandService,
-    private val categoryService: CategoryService,
     private val app: ApplicationEventPublisher
 ) {
     @Transactional
@@ -22,7 +21,7 @@ class ProductService(
         if (request.price <= BigInteger.ZERO) {
             throw InvalidRequestException("price", "price must be greater than 0. $request")
         }
-        categoryService.throwIfNotExist(request.categoryId)
+        Category.throwIfNotExist(request.categoryId)
         if (repository.existsByBrandIdAndCategoryId(request.brandId, request.categoryId)) {
             throw InvalidRequestException("brandId, categoryId", "product already exists. $request")
         }
@@ -43,7 +42,7 @@ class ProductService(
         }
         val e = repository.findByIdOrNull(pid) ?: throw ProductNotFoundException(pid)
         if (e.categoryId != request.categoryId || e.brandId != request.brandId) {
-            if (e.categoryId != request.categoryId) categoryService.throwIfNotExist(request.categoryId)
+            if (e.categoryId != request.categoryId) Category.throwIfNotExist(request.categoryId)
             if (e.brandId != request.brandId) brandService.throwIfNotExist(request.brandId)
             if (repository.existsByBrandIdAndCategoryId(request.brandId, request.categoryId)) {
                 throw InvalidRequestException("brandId, categoryId", "product already exists. $request")

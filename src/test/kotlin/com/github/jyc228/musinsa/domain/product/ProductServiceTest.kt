@@ -2,7 +2,6 @@ package com.github.jyc228.musinsa.domain.product
 
 import com.github.jyc228.musinsa.InvalidRequestException
 import com.github.jyc228.musinsa.domain.brand.BrandService
-import com.github.jyc228.musinsa.domain.category.CategoryService
 import io.kotest.assertions.throwables.shouldThrow
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
@@ -12,9 +11,8 @@ import com.github.jyc228.musinsa.domain.product.ProductController.UpsertProductR
 class ProductServiceTest {
     private val repository: ProductRepository = mock()
     private val brandService: BrandService = mock()
-    private val categoryService: CategoryService = mock()
 
-    private val service = ProductService(repository, brandService, categoryService, mock())
+    private val service = ProductService(repository, brandService, mock())
 
     @Test
     fun `가격이 0원 이하인 경우 상품 등록 실패`() {

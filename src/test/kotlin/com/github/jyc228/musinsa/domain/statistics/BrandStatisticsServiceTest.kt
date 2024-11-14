@@ -1,6 +1,6 @@
 package com.github.jyc228.musinsa.domain.statistics
 
-import com.github.jyc228.musinsa.domain.category.CategoryService
+import com.github.jyc228.musinsa.domain.category.Category
 import com.github.jyc228.musinsa.domain.product.ProductEntity
 import com.github.jyc228.musinsa.domain.product.ProductEvent
 import com.github.jyc228.musinsa.domain.product.ProductService
@@ -21,7 +21,7 @@ class BrandStatisticsServiceTest {
     private val productService: ProductService = mock()
 
     private val service = TestBrandStatisticsService()
-    private val products = (1..8L).map { product(1, it, (it * 100).toInt()) }
+    private val products = Category.allIds.map { product(1, it, it * 100) }
 
     @BeforeEach
     fun setup() {
@@ -37,7 +37,7 @@ class BrandStatisticsServiceTest {
 
     @Test
     fun `새로운 상품 등록시, 등록된 브랜드의 상품 개수가 8개면 갱신`() {
-        val products = (1..8L).map { product(3, it, (it * 10).toInt()) }
+        val products = Category.allIds.map { product(3, it, it * 10) }
         products.forEachIndexed { i, e ->
             given(productService.findAllProductsByBrandId(3)).willReturn(products.take(i + 1))
             if (i == 7) given(database.findCheaperBrandId()).willReturn(3)
@@ -53,7 +53,7 @@ class BrandStatisticsServiceTest {
     fun `상품 브랜드 수정시, 무조건 갱신`() {
         given(database.findCheaperBrandId()).willReturn(555)
         given(productService.findAllProductsByBrandId(555))
-            .willReturn((1..8L).map { product(555, it, (it * 10).toInt()) })
+            .willReturn(Category.allIds.map { product(555, it, it * 10) })
 
         service.fireUpdatedEvent(products[1], products[1].copy(brandId = 999))
         service.getCheaperBrandProduct()?.first shouldBe 555
@@ -76,7 +76,7 @@ class BrandStatisticsServiceTest {
 
         given(database.findCheaperBrandId()).willReturn(2)
         given(productService.findAllProductsByBrandId(2))
-            .willReturn((1..8L).map { product(2, it, (it * 10).toInt()) })
+            .willReturn(Category.allIds.map { product(2, it, it * 10) })
 
         service.fireUpdatedEvent(
             product(23, 1, 200),
@@ -98,7 +98,7 @@ class BrandStatisticsServiceTest {
 
         given(database.findCheaperBrandId()).willReturn(99)
         given(productService.findAllProductsByBrandId(99))
-            .willReturn((1..8L).map { product(99, it, (it * 10).toInt()) })
+            .willReturn(Category.allIds.map { product(99, it, it * 10) })
         service.fireUpdatedEvent(
             products[0],
             products[0].copy(price = products[0].price + 10.toBigInteger())
@@ -112,7 +112,7 @@ class BrandStatisticsServiceTest {
         service.fireUpdate()
     }
 
-    private fun product(brandId: Long, categoryId: Long, price: Int) =
+    private fun product(brandId: Long, categoryId: Int, price: Int) =
         ProductEntity(Random.nextLong(), brandId, categoryId, price.toBigInteger())
 
     private val List<ProductEntity>.totalPrice: BigInteger get() = this.sumOf { it.price }

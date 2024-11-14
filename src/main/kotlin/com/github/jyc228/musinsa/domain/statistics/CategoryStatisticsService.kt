@@ -1,6 +1,6 @@
 package com.github.jyc228.musinsa.domain.statistics
 
-import com.github.jyc228.musinsa.domain.category.CategoryService
+import com.github.jyc228.musinsa.domain.category.Category
 import com.github.jyc228.musinsa.domain.product.ProductEntity
 import com.github.jyc228.musinsa.domain.product.ProductEvent
 import org.springframework.context.event.EventListener
@@ -10,13 +10,12 @@ import org.springframework.stereotype.Service
 @Service
 class CategoryStatisticsService(
     private val database: StatisticsDatabase,
-    private val categoryService: CategoryService,
 ) {
-    private var cheaperProductByCategoryId = mutableMapOf<Long, ProductEntity>()
+    private var cheaperProductByCategoryId = mutableMapOf<Int, ProductEntity>()
 
     @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60)
     protected fun update() {
-        cheaperProductByCategoryId = categoryService.getAllIds()
+        cheaperProductByCategoryId = Category.allIds
             .mapNotNull { database.findCheaperProductByCategoryId(it) }
             .associateBy { it.categoryId }
             .toMutableMap()
@@ -48,7 +47,7 @@ class CategoryStatisticsService(
         updateCategoryMinPriceProduct(next)            // 업데이트된 카테고리 가장 싼 상품 갱신
     }
 
-    private fun updateCategoryMinPriceProduct(categoryId: Long) {
+    private fun updateCategoryMinPriceProduct(categoryId: Int) {
         when (val product = database.findCheaperProductByCategoryId(categoryId)) {
             null -> cheaperProductByCategoryId -= categoryId // 카테고리에 상품이 없음
             else -> cheaperProductByCategoryId[categoryId] = product

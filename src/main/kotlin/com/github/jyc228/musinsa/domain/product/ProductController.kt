@@ -42,7 +42,7 @@ class ProductController(private val service: ProductService) {
 
     data class UpsertProductRequest(
         val brandId: Long,
-        val categoryId: Long,
+        val categoryId: Int,
         val price: BigInteger
     )
 

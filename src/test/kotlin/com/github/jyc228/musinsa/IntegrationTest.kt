@@ -14,5 +14,4 @@ abstract class IntegrationTest {
     private var port: Int = 0
 
     val client by lazy { MusinsaApiClient("http://localhost:${port}") }
-    val categoryIds = (1L..8L).toList()
 }

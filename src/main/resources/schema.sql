@@ -9,14 +9,6 @@ create table if not exists brand
 
 create index if not exists idx__brand__product_count on brand (product_count);
 
-create table if not exists category
-(
-    id   bigint       not null,
-    name varchar(255) not null,
-
-    primary key (id)
-);
-
 create table if not exists product
 (
     id          bigint not null generated always as identity,

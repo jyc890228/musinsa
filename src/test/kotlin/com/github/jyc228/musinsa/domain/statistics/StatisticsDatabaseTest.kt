@@ -41,7 +41,7 @@ class StatisticsDatabaseTest {
         ).map { em.persist(it.first) to it.second }
 
         brandWithPriceRanges.forEach { (brand, priceRange) ->
-            (1L..brand.productCount).forEach { categoryId ->
+            (1..brand.productCount).forEach { categoryId ->
                 ProductEntity(
                     brandId = brand.id,
                     categoryId = categoryId,

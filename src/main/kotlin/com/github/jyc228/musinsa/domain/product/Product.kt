@@ -21,14 +21,14 @@ class ProductEntity(
     var brandId: Long,
 
     @Column(name = "category_id")
-    var categoryId: Long,
+    var categoryId: Int,
 
     @Column(name = "price")
     var price: BigInteger,
 ) {
     fun copy(
         brandId: Long? = null,
-        categoryId: Long? = null,
+        categoryId: Int? = null,
         price: BigInteger? = null
     ) = ProductEntity(id, brandId ?: this.brandId, categoryId ?: this.categoryId, price ?: this.price)
 }
@@ -37,5 +37,5 @@ class ProductEntity(
 interface ProductRepository : JpaRepository<ProductEntity, Long> {
     fun findAllByBrandId(brandId: Long): List<ProductEntity>
 
-    fun existsByBrandIdAndCategoryId(brandId: Long, categoryId: Long): Boolean
+    fun existsByBrandIdAndCategoryId(brandId: Long, categoryId: Int): Boolean
 }

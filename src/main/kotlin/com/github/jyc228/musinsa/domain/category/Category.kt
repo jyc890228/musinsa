@@ -1,24 +1,28 @@
 package com.github.jyc228.musinsa.domain.category
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Table
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
+import com.github.jyc228.musinsa.CategoryNotFoundException
 
-@Entity
-@Table(name = "category")
-class CategoryEntity(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
-
-    @Column(name = "name")
+data class Category(
+    val id: Int,
     val name: String
-)
+) {
+    companion object {
+        val all = listOf(
+            Category(1, "상의"),
+            Category(2, "아우터"),
+            Category(3, "바지"),
+            Category(4, "스니커즈"),
+            Category(5, "가방"),
+            Category(6, "모자"),
+            Category(7, "양말"),
+            Category(8, "액세서리"),
+        ).associateBy { it.id }
 
-@Repository
-interface CategoryRepository : JpaRepository<CategoryEntity, Long>
+        val allIds = all.keys.toList()
+
+        operator fun get(id: Int) = all[id]
+        fun throwIfNotExist(id: Int) {
+            if (id !in all) throw CategoryNotFoundException(id)
+        }
+    }
+}

@@ -1,6 +1,5 @@
 package com.github.jyc228.musinsa.domain.statistics
 
-import com.github.jyc228.musinsa.domain.category.CategoryService
 import com.github.jyc228.musinsa.domain.product.ProductEntity
 import com.github.jyc228.musinsa.domain.product.ProductEvent
 import io.kotest.matchers.maps.shouldHaveSize
@@ -13,7 +12,6 @@ import org.mockito.Mockito.mock
 
 class CategoryStatisticsServiceTest {
     private val database: StatisticsDatabase = mock()
-    private val categoryService: CategoryService = mock()
 
     private val service = TestCategoryStatisticsService()
     private val products = listOf(
@@ -77,7 +75,7 @@ class CategoryStatisticsServiceTest {
 
     @Test
     fun `카테고리 변경하면 기존 카테고리는 db 데이터로 갱신`() {
-        val newCategory = 7L
+        val newCategory = 7
         val product = products.random()
         val dbProduct = product(2, product.categoryId, product.price.toInt() + 100)
         given(database.findCheaperProductByCategoryId(product.categoryId)).willReturn(dbProduct)
@@ -125,15 +123,14 @@ class CategoryStatisticsServiceTest {
     }
 
     private fun prepareTest() {
-        given(categoryService.getAllIds()).willReturn(setOf(1, 2, 3, 4, 5))
         products.onEach { given(database.findCheaperProductByCategoryId(it.categoryId)).willReturn(it) }
         service.fireUpdate()
     }
 
-    private fun product(brandId: Long, categoryId: Long, price: Int) =
+    private fun product(brandId: Long, categoryId: Int, price: Int) =
         ProductEntity(Random.nextLong(), brandId, categoryId, price.toBigInteger())
 
-    inner class TestCategoryStatisticsService : CategoryStatisticsService(database, categoryService) {
+    inner class TestCategoryStatisticsService : CategoryStatisticsService(database) {
         fun fireUpdate() = super.update()
         fun fireCreatedEvent(product: ProductEntity) = super.listen(ProductEvent.Created(product))
         fun fireUpdatedEvent(prev: ProductEntity, next: ProductEntity) = super.listen(ProductEvent.Updated(prev, next))

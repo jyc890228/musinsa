@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class StatisticsDatabase(private val em: EntityManager) {
-    fun findCheaperProductByCategoryId(categoryId: Long): ProductEntity? {
+    fun findCheaperProductByCategoryId(categoryId: Int): ProductEntity? {
         return em.createQuery(
             "FROM ProductEntity p WHERE p.categoryId = :categoryId ORDER BY p.price LIMIT 1",
             ProductEntity::class.java

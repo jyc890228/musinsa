@@ -8,6 +8,5 @@ spring:
       ddl-auto: none
   sql:
     init:
-      data-locations: classpath:init.sql
       schema-locations: classpath:schema.sql
       mode: never

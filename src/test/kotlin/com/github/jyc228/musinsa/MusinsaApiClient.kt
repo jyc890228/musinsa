@@ -44,14 +44,14 @@ class MusinsaApiClient(url: String) {
 
     fun deleteBrand(id: Long): Unit = runBlocking { http.delete("/api/brands/$id").throwIfFail() }
 
-    fun createProduct(brandId: Long, categoryId: Long, price: BigInteger) = runBlocking {
+    fun createProduct(brandId: Long, categoryId: Int, price: BigInteger) = runBlocking {
         val response = http.post("/api/products") {
             setBody(ProductController.UpsertProductRequest(brandId, categoryId, price))
         }
         response.throwIfFail().body<ProductController.ProductIdResponse>().id
     }
 
-    fun updateProduct(id: Long, brandId: Long, categoryId: Long, price: BigInteger): Unit = runBlocking {
+    fun updateProduct(id: Long, brandId: Long, categoryId: Int, price: BigInteger): Unit = runBlocking {
         http.put("/api/products/$id") {
             setBody(ProductController.UpsertProductRequest(brandId, categoryId, price))
         }.throwIfFail()
