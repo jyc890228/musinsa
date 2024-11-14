@@ -20,7 +20,10 @@ class BrandEntity(
     val id: Long = 0,
 
     @Column(name = "name")
-    val name: String
+    var name: String,
+
+    @Column(name = "product_count")
+    var productCount: Int = 0,
 )
 
 @Repository
@@ -38,4 +41,15 @@ interface BrandRepository : JpaRepository<BrandEntity, Long> {
     @Modifying
     @Query("""DELETE BrandEntity e WHERE e.id = :id""")
     fun removeById(id: Long): Int
+
+    @Transactional
+    @Modifying
+    @Query("""
+        UPDATE BrandEntity e 
+        SET e.productCount = CASE 
+            WHEN e.productCount + :amount >= 0 THEN e.productCount + :amount 
+        ELSE 0 END
+        WHERE e.id = :id
+        """)
+    fun addProductCount(id: Long, amount: Int): Int
 }

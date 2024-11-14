@@ -63,6 +63,11 @@ class MusinsaApiClient(url: String) {
         http.get("/api/statistics/category-cheaper-product").throwIfFail().body()
     }
 
+    fun getBrandCheaperProduct(): StatisticsController.BrandCheaperProductResponse = runBlocking {
+        http.get("/api/statistics/brand-cheaper-product").throwIfFail().body()
+    }
+
+
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {
         if (status.isSuccess()) return this
         throw ResponseException(status.value, body<MusinsaExceptionHandler.ErrorResponse>().message)

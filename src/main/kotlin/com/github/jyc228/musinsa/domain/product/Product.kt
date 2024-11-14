@@ -8,10 +8,7 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.math.BigInteger
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
 
 @Entity
 @Table(name = "product")
@@ -28,14 +25,17 @@ class ProductEntity(
 
     @Column(name = "price")
     var price: BigInteger,
-)
+) {
+    fun copy(
+        brandId: Long? = null,
+        categoryId: Long? = null,
+        price: BigInteger? = null
+    ) = ProductEntity(id, brandId ?: this.brandId, categoryId ?: this.categoryId, price ?: this.price)
+}
 
 @Repository
 interface ProductRepository : JpaRepository<ProductEntity, Long> {
-    fun existsByBrandIdAndCategoryId(brandId: Long, categoryId: Long): Boolean
+    fun findAllByBrandId(brandId: Long): List<ProductEntity>
 
-    @Transactional
-    @Modifying
-    @Query("""DELETE ProductEntity e WHERE e.id = :id""")
-    fun removeById(id: Long): Int
+    fun existsByBrandIdAndCategoryId(brandId: Long, categoryId: Long): Boolean
 }

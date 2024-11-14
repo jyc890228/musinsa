@@ -52,7 +52,7 @@ class CategoryStatisticsServiceTest {
     fun `제일싼 상품의 가격을 낮춘 경우 갱신`() {
         val product = products.random()
 
-        service.fireUpdatedEvent(product.copy(price = product.price.toInt() / 2))
+        service.fireUpdatedEvent(product, product.copy(price = product.price / 2.toBigInteger()))
         val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 5
@@ -65,7 +65,7 @@ class CategoryStatisticsServiceTest {
         val dbProduct = product(2, product.categoryId, product.price.toInt() + 100)
         given(database.findCheaperProductByCategoryId(product.categoryId)).willReturn(dbProduct)
 
-        service.fireUpdatedEvent(product.copy(price = product.price.toInt() + 10000))
+        service.fireUpdatedEvent(product, product.copy(price = product.price + 10000.toBigInteger()))
         val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 5
@@ -82,7 +82,7 @@ class CategoryStatisticsServiceTest {
         val dbProduct = product(2, product.categoryId, product.price.toInt() + 100)
         given(database.findCheaperProductByCategoryId(product.categoryId)).willReturn(dbProduct)
 
-        service.fireUpdatedEvent(product.copy(categoryId = newCategory))
+        service.fireUpdatedEvent(product, product.copy(categoryId = newCategory))
         val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 6
@@ -133,13 +133,10 @@ class CategoryStatisticsServiceTest {
     private fun product(brandId: Long, categoryId: Long, price: Int) =
         ProductEntity(Random.nextLong(), brandId, categoryId, price.toBigInteger())
 
-    private fun ProductEntity.copy(categoryId: Long? = null, price: Int? = null) =
-        ProductEntity(id, brandId, categoryId ?: this.categoryId, price?.toBigInteger() ?: this.price)
-
     inner class TestCategoryStatisticsService : CategoryStatisticsService(database, categoryService) {
         fun fireUpdate() = super.update()
         fun fireCreatedEvent(product: ProductEntity) = super.listen(ProductEvent.Created(product))
-        fun fireUpdatedEvent(product: ProductEntity) = super.listen(ProductEvent.Updated(product))
+        fun fireUpdatedEvent(prev: ProductEntity, next: ProductEntity) = super.listen(ProductEvent.Updated(prev, next))
         fun fireDeletedEvent(pid: Long) = super.listen(ProductEvent.Deleted(pid))
     }
 }

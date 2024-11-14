@@ -1,5 +1,6 @@
 package com.github.jyc228.musinsa.domain.statistics
 
+import com.github.jyc228.musinsa.StatisticsException
 import com.github.jyc228.musinsa.domain.brand.BrandService
 import com.github.jyc228.musinsa.domain.category.CategoryService
 import java.math.BigInteger
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class StatisticsController(
     private val categoryStatisticsService: CategoryStatisticsService,
+    private val brandStatisticsService: BrandStatisticsService,
     private val categoryService: CategoryService,
     private val brandService: BrandService
 ) {
@@ -29,10 +31,39 @@ class StatisticsController(
         )
     }
 
+    @GetMapping("/api/statistics/brand-cheaper-product")
+    fun getBrandCheaperProduct(): BrandCheaperProductResponse {
+        val (brandId, products) = brandStatisticsService.getCheaperBrandProduct()
+            ?: throw StatisticsException("cheaper brand products not exist")
+        val brand = brandService.findByIdOrNull(brandId) ?: throw StatisticsException("brand $brandId not exist")
+        return BrandCheaperProductResponse(
+            lowestPrice = BrandCheaperProductResponse.LowestPriceData(
+                brand = brand.name,
+                category = products.map {
+                    BrandCheaperProductResponse.Category(
+                        category = categoryService.getByIdOrNull(it.categoryId)?.name ?: "Unknown Category",
+                        price = it.price,
+                    )
+                },
+                totalPrice = products.sumOf { it.price }
+            )
+        )
+    }
+
     data class CategoryCheaperProductResponse(
         val data: List<Element>,
         val totalPrice: BigInteger,
     ) {
         data class Element(val category: String, val brand: String, val price: BigInteger)
+    }
+
+    data class BrandCheaperProductResponse(val lowestPrice: LowestPriceData) {
+        data class LowestPriceData(
+            val brand: String,
+            val category: List<Category>,
+            val totalPrice: BigInteger
+        )
+
+        data class Category(val category: String, val price: BigInteger)
     }
 }

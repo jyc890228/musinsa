@@ -12,4 +12,18 @@ class StatisticsDatabase(private val em: EntityManager) {
             ProductEntity::class.java
         ).setParameter("categoryId", categoryId).resultList.getOrNull(0)
     }
+
+    fun findCheaperBrandId(): Long? {
+        return em.createQuery(
+            """
+                SELECT p.brandId 
+                FROM ProductEntity p 
+                WHERE p.brandId IN (SELECT id FROM BrandEntity WHERE productCount = 8)
+                GROUP BY p.brandId
+                ORDER BY sum(p.price) 
+                LIMIT 1
+            """.trimIndent(),
+            Long::class.java
+        ).resultList.getOrNull(0)
+    }
 }

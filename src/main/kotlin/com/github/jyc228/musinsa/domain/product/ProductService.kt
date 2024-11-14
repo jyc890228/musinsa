@@ -23,10 +23,10 @@ class ProductService(
             throw InvalidRequestException("price", "price must be greater than 0. $request")
         }
         categoryService.throwIfNotExist(request.categoryId)
-        brandService.throwIfNotExist(request.brandId)
         if (repository.existsByBrandIdAndCategoryId(request.brandId, request.categoryId)) {
             throw InvalidRequestException("brandId, categoryId", "product already exists. $request")
         }
+        brandService.addProductCount(request.brandId, 1)
         return repository.save(
             ProductEntity(
                 brandId = request.brandId,
@@ -49,15 +49,24 @@ class ProductService(
                 throw InvalidRequestException("brandId, categoryId", "product already exists. $request")
             }
         }
+        if (e.categoryId != request.categoryId) {
+            brandService.addProductCount(e.brandId, -1)
+            brandService.addProductCount(request.brandId, 1)
+        }
+        val prev = e.copy()
         e.categoryId = request.categoryId
         e.brandId = request.brandId
         e.price = request.price
         repository.save(e)
-        app.publishEvent(ProductEvent.Updated(e))
+        app.publishEvent(ProductEvent.Updated(prev, e))
     }
 
     fun deleteProduct(pid: Long) {
-        if (repository.removeById(pid) == 0) throw ProductNotFoundException(pid)
+        val product = repository.findByIdOrNull(pid) ?: throw ProductNotFoundException(pid)
+        repository.delete(product)
+        brandService.addProductCount(product.brandId, -1)
         app.publishEvent(ProductEvent.Deleted(pid))
     }
+
+    fun findAllProductsByBrandId(brandId: Long): List<ProductEntity> = repository.findAllByBrandId(brandId)
 }

@@ -21,4 +21,19 @@ class StatisticsControllerTest : IntegrationTest() {
         result.data shouldHaveSize 8
         result.totalPrice shouldBeGreaterThan 0.toBigInteger()
     }
+
+    @Test
+    fun `가장싼 브랜드 상품을 찾을 수 있다`() {
+        listOf(
+            "AA" to (10..100),
+            "BB" to (1000..10000),
+            "CC" to (1000..10000)
+        ).forEach { (name, priceRange) ->
+            val brandId = client.createBrand(name)
+            categoryIds.forEach { client.createProduct(brandId, it, priceRange.random().toBigInteger()) }
+        }
+
+        val result = client.getBrandCheaperProduct()
+        result.lowestPrice.brand shouldBe "AA"
+    }
 }

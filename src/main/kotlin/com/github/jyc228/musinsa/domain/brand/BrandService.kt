@@ -1,6 +1,7 @@
 package com.github.jyc228.musinsa.domain.brand
 
 import com.github.jyc228.musinsa.BrandNotFoundException
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
@@ -24,4 +25,10 @@ class BrandService(
     }
 
     fun findAllById(id: Set<Long>): List<BrandEntity> = repository.findAllById(id)
+
+    fun addProductCount(id: Long, amount: Int) {
+        if (repository.addProductCount(id, amount) == 0) throw BrandNotFoundException(id)
+    }
+
+    fun findByIdOrNull(id: Long) = repository.findByIdOrNull(id)
 }

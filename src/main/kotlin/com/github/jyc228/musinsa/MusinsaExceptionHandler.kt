@@ -15,6 +15,7 @@ class MusinsaExceptionHandler {
         is ProductNotFoundException -> HttpStatus.NOT_FOUND body "product not found"
         is InvalidRequestException -> HttpStatus.BAD_REQUEST body "invalid parameter ${e.param}"
         is UpsertProductException -> HttpStatus.BAD_REQUEST body "create product failed. reason: ${exceptionHandler(e.cause).body?.message}"
+        is StatisticsException -> HttpStatus.INTERNAL_SERVER_ERROR body (e.message ?: "internal server error")
     }
 
     data class ErrorResponse(val message: String)
