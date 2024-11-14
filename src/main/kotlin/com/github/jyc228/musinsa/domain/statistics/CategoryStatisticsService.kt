@@ -3,10 +3,18 @@ package com.github.jyc228.musinsa.domain.statistics
 import com.github.jyc228.musinsa.domain.category.Category
 import com.github.jyc228.musinsa.domain.product.ProductEntity
 import com.github.jyc228.musinsa.domain.product.ProductEvent
+import com.github.jyc228.musinsa.domain.statistics.CategoryStatisticsService.Price
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
+/**
+ * 카테고리 단위로 최소, 최대 가격을 수집
+ *
+ * category id 와 price 에 인덱스를 적용했고 카테고리는 8개 고정이므로 이벤트 처리중일땐 쿼리 최대 2번 [Price.refreshIfBoundary], 갱신 주기때는 최대 16번 실행 [update].
+ *
+ * native 한방 쿼리 복잡하게 만드는것보단 작고 코스트 낮은 쿼리 여러번 돌리는게 더 우위에 있다고 판단했습니다.
+ */
 @Service
 class CategoryStatisticsService(
     private val database: StatisticsDatabase,
