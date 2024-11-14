@@ -20,7 +20,7 @@ class StatisticsController(
     @GetMapping("/api/statistics/category-product/{categoryName}")
     fun getCategoryProduct(@PathVariable categoryName: String): CategoryProductResponse {
         val (min, max) = categoryStatisticsService.getCategoryMinMaxProduct(Category.getOrThrow(categoryName).id)
-            ?: throw StatisticsException("category $categoryName product not exist")
+            ?: throw StatisticsException("category product not exist", categoryName)
         val brandById = brandService.findAllById(setOf(min.brandId, max.brandId)).associateBy { it.id }
         return CategoryProductResponse(
             category = categoryName,
@@ -51,7 +51,7 @@ class StatisticsController(
     fun getBrandCheaperProduct(): BrandCheaperProductResponse {
         val (brandId, products) = brandStatisticsService.getCheaperBrandProduct()
             ?: throw StatisticsException("cheaper brand products not exist")
-        val brand = brandService.findByIdOrNull(brandId) ?: throw StatisticsException("brand $brandId not exist")
+        val brand = brandService.findByIdOrNull(brandId) ?: throw StatisticsException("brand not exist", brandId)
         return BrandCheaperProductResponse(
             lowestPrice = BrandCheaperProductResponse.LowestPriceData(
                 brand = brand.name,

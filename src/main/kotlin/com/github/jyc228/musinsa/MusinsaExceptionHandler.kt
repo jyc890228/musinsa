@@ -10,15 +10,17 @@ class MusinsaExceptionHandler {
 
     @ExceptionHandler(MusinsaException::class)
     fun exceptionHandler(e: MusinsaException): ResponseEntity<ErrorResponse> = when (e) {
-        is BrandNotFoundException -> HttpStatus.NOT_FOUND body "brand not found"
-        is CategoryNotFoundException -> HttpStatus.NOT_FOUND body "category not found"
-        is ProductNotFoundException -> HttpStatus.NOT_FOUND body "product not found"
-        is InvalidRequestException -> HttpStatus.BAD_REQUEST body "invalid parameter ${e.param}"
-        is UpsertProductException -> HttpStatus.BAD_REQUEST body "create product failed. reason: ${exceptionHandler(e.cause).body?.message}"
-        is StatisticsException -> HttpStatus.INTERNAL_SERVER_ERROR body (e.message ?: "internal server error")
+        is BrandNotFoundException -> HttpStatus.NOT_FOUND body ("brand not found" withValue e)
+        is CategoryNotFoundException -> HttpStatus.NOT_FOUND body ("category not found" withValue e)
+        is ProductNotFoundException -> HttpStatus.NOT_FOUND body ("product not found" withValue e)
+        is InvalidRequestException -> HttpStatus.BAD_REQUEST body ("invalid parameter [${e.message}]" withValue e)
+        is UpsertProductException -> HttpStatus.BAD_REQUEST body ("create product failed. ${exceptionHandler(e.cause).body?.message}" withValue e)
+        is StatisticsException -> HttpStatus.INTERNAL_SERVER_ERROR body ("internal server error" withValue e)
     }
 
-    data class ErrorResponse(val message: String)
+    data class ErrorResponse(val value: Any?, val message: String)
 
-    private infix fun HttpStatus.body(message: String) = ResponseEntity.status(this).body(ErrorResponse(message))
+    private infix fun String.withValue(e: MusinsaException) = ErrorResponse(e.value, this)
+
+    private infix fun HttpStatus.body(error: ErrorResponse) = ResponseEntity.status(this).body(error)
 }

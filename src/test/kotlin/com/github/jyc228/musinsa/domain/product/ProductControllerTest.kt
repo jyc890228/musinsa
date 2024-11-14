@@ -3,6 +3,7 @@ package com.github.jyc228.musinsa.domain.product
 import com.github.jyc228.musinsa.IntegrationTest
 import com.github.jyc228.musinsa.MusinsaApiClient
 import com.github.jyc228.musinsa.domain.category.Category
+import com.github.jyc228.musinsa.shouldThrowResponseException
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.longs.shouldBeGreaterThan
@@ -24,10 +25,10 @@ class ProductControllerTest : IntegrationTest() {
         shouldNotThrowAny { client.updateProduct(pid, brandId, Category.allIds[2], 2000.toBigInteger()) }
         shouldNotThrowAny { client.updateProduct(pid, brandId, Category.allIds[3], 2000.toBigInteger()) }
 
-        shouldThrow<MusinsaApiClient.ResponseException> {
+        shouldThrowResponseException {
             client.updateProduct(pid + 394, brandId, 2, 2000.toBigInteger())
         }.statusCode shouldBe 404
-        shouldThrow<MusinsaApiClient.ResponseException> {
+        shouldThrowResponseException {
             client.updateProduct(pid, brandId, Category.allIds[2], 0.toBigInteger())
         }.statusCode shouldBe 400
     }
@@ -37,8 +38,6 @@ class ProductControllerTest : IntegrationTest() {
         val pid = client.createProduct(brandId, Category.allIds[5], 1000.toBigInteger())
 
         shouldNotThrowAny { client.deleteProduct(pid) }
-        shouldThrow<MusinsaApiClient.ResponseException> {
-            client.deleteProduct(pid + 193)
-        }.statusCode shouldBe 404
+        shouldThrowResponseException { client.deleteProduct(pid + 193) }.statusCode shouldBe 404
     }
 }

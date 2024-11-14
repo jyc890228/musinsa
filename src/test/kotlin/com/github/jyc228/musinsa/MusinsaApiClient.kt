@@ -3,13 +3,13 @@ package com.github.jyc228.musinsa
 import com.github.jyc228.musinsa.domain.brand.BrandController
 import com.github.jyc228.musinsa.domain.product.ProductController
 import com.github.jyc228.musinsa.domain.statistics.StatisticsController
+import io.kotest.assertions.throwables.shouldThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -17,11 +17,9 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.encodeURLParameter
-import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
 import java.math.BigInteger
-import java.net.URL
 import kotlinx.coroutines.runBlocking
 
 class MusinsaApiClient(url: String) {
@@ -77,8 +75,15 @@ class MusinsaApiClient(url: String) {
 
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {
         if (status.isSuccess()) return this
-        throw ResponseException(status.value, body<MusinsaExceptionHandler.ErrorResponse>().message)
+        throw ResponseException(status.value, body<MusinsaExceptionHandler.ErrorResponse>())
     }
 
-    class ResponseException(val statusCode: Int, message: String) : RuntimeException("[$statusCode] $message")
+    class ResponseException(
+        val statusCode: Int,
+        error: MusinsaExceptionHandler.ErrorResponse
+    ) : RuntimeException("[$statusCode] ${error.message} ${error.value}")
 }
+
+fun shouldThrowResponseException(block: () -> Any?) = shouldThrow<MusinsaApiClient.ResponseException> {
+    block()
+}.apply { System.err.println(message) }

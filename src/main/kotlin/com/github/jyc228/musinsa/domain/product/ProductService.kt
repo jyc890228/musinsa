@@ -19,11 +19,11 @@ class ProductService(
     @Transactional
     fun createProduct(request: ProductController.UpsertProductRequest): ProductEntity {
         if (request.price <= BigInteger.ZERO) {
-            throw InvalidRequestException("price", "price must be greater than 0. $request")
+            throw InvalidRequestException(request.price, "invalid price")
         }
         Category.throwIfNotExist(request.categoryId)
         if (repository.existsByBrandIdAndCategoryId(request.brandId, request.categoryId)) {
-            throw InvalidRequestException("brandId, categoryId", "product already exists. $request")
+            throw InvalidRequestException(request.brandId to request.categoryId, "product already exists")
         }
         brandService.addProductCount(request.brandId, 1)
         return repository.save(
@@ -38,14 +38,14 @@ class ProductService(
     @Transactional
     fun updateProduct(request: ProductController.UpsertProductRequest, pid: Long) {
         if (request.price <= BigInteger.ZERO) {
-            throw InvalidRequestException("price", "price must be greater than 0. $request")
+            throw InvalidRequestException(request.price, "invalid price")
         }
         val e = repository.findByIdOrNull(pid) ?: throw ProductNotFoundException(pid)
         if (e.categoryId != request.categoryId || e.brandId != request.brandId) {
             if (e.categoryId != request.categoryId) Category.throwIfNotExist(request.categoryId)
             if (e.brandId != request.brandId) brandService.throwIfNotExist(request.brandId)
             if (repository.existsByBrandIdAndCategoryId(request.brandId, request.categoryId)) {
-                throw InvalidRequestException("brandId, categoryId", "product already exists. $request")
+                throw InvalidRequestException(request.brandId to request.categoryId, "product already exists")
             }
         }
         if (e.categoryId != request.categoryId) {

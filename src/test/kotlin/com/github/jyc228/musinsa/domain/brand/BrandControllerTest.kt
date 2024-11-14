@@ -1,9 +1,8 @@
 package com.github.jyc228.musinsa.domain.brand
 
 import com.github.jyc228.musinsa.IntegrationTest
-import com.github.jyc228.musinsa.MusinsaApiClient
+import com.github.jyc228.musinsa.shouldThrowResponseException
 import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import org.junit.jupiter.api.Test
 
@@ -18,7 +17,7 @@ class BrandControllerTest : IntegrationTest() {
     fun `brand 를 수정할 수 있다`() {
         val newBrandId = client.createBrand("test2")
         shouldNotThrowAny { client.updateBrand(newBrandId, "test2 updated") }
-        shouldThrow<MusinsaApiClient.ResponseException> {
+        shouldThrowResponseException {
             client.updateBrand(newBrandId + 9999, "not exist brand updated")
         }
     }
@@ -27,6 +26,8 @@ class BrandControllerTest : IntegrationTest() {
     fun `brand 를 삭제할 수 있다`() {
         val newBrandId = client.createBrand("test2")
         shouldNotThrowAny { client.deleteBrand(newBrandId) }
-        shouldThrow<MusinsaApiClient.ResponseException> { client.deleteBrand(newBrandId + 9999) }
+        shouldThrowResponseException {
+            client.deleteBrand(newBrandId + 9999)
+        }
     }
 }

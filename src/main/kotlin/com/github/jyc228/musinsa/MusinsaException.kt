@@ -1,12 +1,23 @@
 package com.github.jyc228.musinsa
 
-sealed class MusinsaException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+sealed class MusinsaException(
+    message: String? = null,
+    cause: MusinsaException? = null
+) : RuntimeException(message, cause) {
+    open val value: Any? = cause?.value
+}
 
-class BrandNotFoundException(id: Long) : MusinsaException("brand $id not found")
-class CategoryNotFoundException(idOrName: Any) : MusinsaException("category $idOrName not found")
-class ProductNotFoundException(id: Long) : MusinsaException("product $id not found")
+/** @param value 브랜드 id */
+class BrandNotFoundException(override val value: Long) : MusinsaException()
 
-class InvalidRequestException(val param: String, message: String) : MusinsaException(message)
-class StatisticsException(message: String) : MusinsaException(message)
+/** @param value 카테고리 이름 or id */
+class CategoryNotFoundException(override val value: Any) : MusinsaException()
 
-class UpsertProductException(override val cause: MusinsaException) : MusinsaException("create product failed", cause)
+/** @param value 상품 id */
+class ProductNotFoundException(override val value: Long) : MusinsaException()
+
+class InvalidRequestException(override val value: Any, message: String) : MusinsaException(message)
+
+class StatisticsException(override val message: String, override val value: Any? = null) : MusinsaException(message)
+
+class UpsertProductException(override val cause: MusinsaException) : MusinsaException(cause = cause)
