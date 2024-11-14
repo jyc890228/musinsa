@@ -6,9 +6,16 @@ import org.springframework.stereotype.Service
 
 @Service
 class StatisticsDatabase(private val em: EntityManager) {
-    fun findCheaperProductByCategoryId(categoryId: Int): ProductEntity? {
+    fun findLowestPriceProductByCategoryId(categoryId: Int): ProductEntity? {
         return em.createQuery(
             "FROM ProductEntity p WHERE p.categoryId = :categoryId ORDER BY p.price LIMIT 1",
+            ProductEntity::class.java
+        ).setParameter("categoryId", categoryId).resultList.getOrNull(0)
+    }
+
+    fun findHighestPriceProductByCategoryId(categoryId: Int): ProductEntity? {
+        return em.createQuery(
+            "FROM ProductEntity p WHERE p.categoryId = :categoryId ORDER BY p.price DESC LIMIT 1",
             ProductEntity::class.java
         ).setParameter("categoryId", categoryId).resultList.getOrNull(0)
     }

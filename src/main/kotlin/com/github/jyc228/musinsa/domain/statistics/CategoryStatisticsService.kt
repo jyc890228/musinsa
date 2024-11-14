@@ -11,57 +11,81 @@ import org.springframework.stereotype.Service
 class CategoryStatisticsService(
     private val database: StatisticsDatabase,
 ) {
-    private var cheaperProductByCategoryId = mutableMapOf<Int, ProductEntity>()
+    private var priceByCid = mutableMapOf<Int, Price>()
+
+    fun getCategoryMinMaxProduct(categoryId: Int): Pair<ProductEntity, ProductEntity>? {
+        val price = priceByCid[categoryId] ?: return null
+        return Pair(price.minEntity ?: return null, price.maxEntity ?: return null)
+    }
+
+    fun getCategoryCheaperProduct(): List<ProductEntity> {
+        return priceByCid.values.mapNotNull { it.minEntity }.sortedBy { it.categoryId }
+    }
 
     @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60)
     protected fun update() {
-        cheaperProductByCategoryId = Category.allIds
-            .mapNotNull { database.findCheaperProductByCategoryId(it) }
-            .associateBy { it.categoryId }
+        priceByCid = Category.allIds
+            .mapNotNull {
+                val min = database.findLowestPriceProductByCategoryId(it) ?: return@mapNotNull null
+                val max = database.findHighestPriceProductByCategoryId(it)
+                it to Price(min, max ?: min)
+            }
+            .associateBy({ it.first }, { it.second })
             .toMutableMap()
     }
 
     @EventListener(ProductEvent::class)
     protected fun listen(e: ProductEvent) {
         when (e) {
-            is ProductEvent.Created -> updateCategoryMinPriceProduct(e.entity)
-            is ProductEvent.Updated -> handleUpdated(e.next)
-            is ProductEvent.Deleted -> updateCategoryMinPriceProduct(
-                cheaperProductByCategoryId.values.find { it.id == e.pid }?.categoryId ?: return
-            )
+            is ProductEvent.Created -> priceByCid.getOrPut(e.entity.categoryId) { Price(e.entity) }.update(e.entity)
+            is ProductEvent.Updated -> handleUpdated(e.prev, e.next)
+            is ProductEvent.Deleted -> priceByCid[e.entity.categoryId]?.refreshIfBoundary(e.entity, database)
         }
     }
 
-    private fun handleUpdated(next: ProductEntity) {
-        cheaperProductByCategoryId[next.categoryId]?.takeIf { it.categoryId == next.categoryId }?.let { prev ->
-            // 가격만 수정한 케이스
-            if (prev.price < next.price) updateCategoryMinPriceProduct(prev.categoryId)
-            else cheaperProductByCategoryId[next.categoryId] = next
-            return@handleUpdated
+    private fun handleUpdated(prev: ProductEntity, next: ProductEntity) {
+        // 카테고리가 바뀌는 경우
+        // 기존 카테고리에서 min, max 인 경우 -> db 데이터로 기존 카테고리 min, max 갱신
+        // 기존 카테고리에서 min, max 가 아닌 경우 -> 아무것도 안함
+        // 신규 카테고리에서 min, max 안에 들어온 경우 -> 아무것도 안함
+        // 신규 카테고리에서 min, max 를 초과한 경우 -> event 데이터로 신규 min, max 갱신
+        if (prev.categoryId != next.categoryId) {
+            priceByCid[prev.categoryId]?.refreshIfBoundary(prev, database)
+            priceByCid.getOrPut(next.categoryId) { Price(next) }.update(next)
+            return
         }
-        val prev = cheaperProductByCategoryId.values.find { it.id == next.id }
-            ?: return updateCategoryMinPriceProduct(next) // 이전에 가장 싼 상품이 아님.
 
-        // 기존에 싼 가격으로 등록된 상품의 카테고리가 변경됨.
-        updateCategoryMinPriceProduct(prev.categoryId) // 기존 카테고리 가장 싼 상품 갱신
-        updateCategoryMinPriceProduct(next)            // 업데이트된 카테고리 가장 싼 상품 갱신
-    }
-
-    private fun updateCategoryMinPriceProduct(categoryId: Int) {
-        when (val product = database.findCheaperProductByCategoryId(categoryId)) {
-            null -> cheaperProductByCategoryId -= categoryId // 카테고리에 상품이 없음
-            else -> cheaperProductByCategoryId[categoryId] = product
-        }
-    }
-
-    private fun updateCategoryMinPriceProduct(next: ProductEntity) {
-        val prev = cheaperProductByCategoryId[next.categoryId]
-        if (prev == null || prev.price > next.price) {
-            cheaperProductByCategoryId[next.categoryId] = next
+        // 가격만 바뀌는 경우
+        // 변경후 가격이 min, max 범위를 넘은 경우 -> 갱신
+        // 변경전 가격이 min, max -> db 데이터로 min, max 갱신
+        if (prev.price != next.price) {
+            val price = priceByCid.getOrPut(next.categoryId) { Price(next) }
+            price.update(next)
+            price.refreshIfBoundary(prev, database)
+            return
         }
     }
 
-    fun getCategoryCheaperProduct(): List<ProductEntity> {
-        return cheaperProductByCategoryId.values.sortedBy { it.categoryId }
+    private data class Price(var minEntity: ProductEntity?, var maxEntity: ProductEntity?) {
+        constructor(e: ProductEntity) : this(e, e)
+
+        val min get() = minEntity?.price
+        val max get() = maxEntity?.price
+
+        /** [product] 가격이 [min]..[max] 범위 밖에 있으면 갱신한다. */
+        fun update(product: ProductEntity) {
+            when {
+                min == null || product.price < min -> minEntity = product
+                max == null || max!! < product.price -> maxEntity = product
+            }
+        }
+
+        /** [product] 가격이 [min], [max] 와 동일한 경우, db 값으로 갱신한다. */
+        fun refreshIfBoundary(product: ProductEntity, database: StatisticsDatabase) {
+            when (product.price) {
+                min -> minEntity = database.findLowestPriceProductByCategoryId(product.categoryId)
+                max -> maxEntity = database.findHighestPriceProductByCategoryId(product.categoryId)
+            }
+        }
     }
 }

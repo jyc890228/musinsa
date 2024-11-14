@@ -9,15 +9,19 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
+import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
 import io.ktor.serialization.jackson.jackson
 import java.math.BigInteger
+import java.net.URL
 import kotlinx.coroutines.runBlocking
 
 class MusinsaApiClient(url: String) {
@@ -59,6 +63,10 @@ class MusinsaApiClient(url: String) {
 
     fun deleteProduct(id: Long): Unit = runBlocking { http.delete("/api/products/$id").throwIfFail() }
 
+    fun getCategoryProduct(categoryName: String): StatisticsController.CategoryProductResponse = runBlocking {
+        http.get("/api/statistics/category-product/${categoryName.encodeURLParameter()}").throwIfFail().body()
+    }
+
     fun getCategoryCheaperProduct(): StatisticsController.CategoryCheaperProductResponse = runBlocking {
         http.get("/api/statistics/category-cheaper-product").throwIfFail().body()
     }
@@ -66,7 +74,6 @@ class MusinsaApiClient(url: String) {
     fun getBrandCheaperProduct(): StatisticsController.BrandCheaperProductResponse = runBlocking {
         http.get("/api/statistics/brand-cheaper-product").throwIfFail().body()
     }
-
 
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {
         if (status.isSuccess()) return this

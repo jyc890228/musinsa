@@ -1,8 +1,10 @@
 package com.github.jyc228.musinsa.domain.statistics
 
 import com.github.jyc228.musinsa.StatisticsException
+import com.github.jyc228.musinsa.domain.brand.BrandEntity
 import com.github.jyc228.musinsa.domain.brand.BrandService
 import com.github.jyc228.musinsa.domain.category.Category
+import com.github.jyc228.musinsa.domain.product.ProductEntity
 import java.math.BigInteger
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -14,6 +16,19 @@ class StatisticsController(
     private val brandStatisticsService: BrandStatisticsService,
     private val brandService: BrandService
 ) {
+
+    @GetMapping("/api/statistics/category-product/{categoryName}")
+    fun getCategoryProduct(@PathVariable categoryName: String): CategoryProductResponse {
+        val (min, max) = categoryStatisticsService.getCategoryMinMaxProduct(Category.getOrThrow(categoryName).id)
+            ?: throw StatisticsException("category $categoryName product not exist")
+        val brandById = brandService.findAllById(setOf(min.brandId, max.brandId)).associateBy { it.id }
+        return CategoryProductResponse(
+            category = categoryName,
+            lowestPrice = CategoryProductResponse.PriceData.of(min, brandById[min.brandId]),
+            highestPrice = CategoryProductResponse.PriceData.of(max, brandById[max.brandId])
+        )
+    }
+
 
     @GetMapping("/api/statistics/category-cheaper-product")
     fun getCategoryCheaperProduct(): CategoryCheaperProductResponse {
@@ -49,6 +64,21 @@ class StatisticsController(
                 totalPrice = products.sumOf { it.price }
             )
         )
+    }
+
+    private fun CategoryProductResponse.PriceData.Companion.of(
+        product: ProductEntity,
+        brand: BrandEntity?
+    ) = CategoryProductResponse.PriceData(brand = brand?.name ?: "Unknown brand ", price = product.price)
+
+    data class CategoryProductResponse(
+        val category: String,
+        val lowestPrice: PriceData,
+        val highestPrice: PriceData,
+    ) {
+        data class PriceData(val brand: String, val price: BigInteger) {
+            companion object
+        }
     }
 
     data class CategoryCheaperProductResponse(

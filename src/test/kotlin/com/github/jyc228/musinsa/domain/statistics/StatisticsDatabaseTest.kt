@@ -27,9 +27,9 @@ class StatisticsDatabaseTest {
         ).forEach { em.persist(it) }
 
         val db = StatisticsDatabase(em.entityManager)
-        db.findCheaperProductByCategoryId(1)?.price shouldBe 1000.toBigInteger()
-        db.findCheaperProductByCategoryId(2)?.price shouldBe 5000.toBigInteger()
-        db.findCheaperProductByCategoryId(3)?.price shouldBe 300.toBigInteger()
+        db.findLowestPriceProductByCategoryId(1)?.price shouldBe 1000.toBigInteger()
+        db.findLowestPriceProductByCategoryId(2)?.price shouldBe 5000.toBigInteger()
+        db.findLowestPriceProductByCategoryId(3)?.price shouldBe 300.toBigInteger()
     }
 
     @Test

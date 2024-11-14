@@ -4,9 +4,9 @@ import com.github.jyc228.musinsa.IntegrationTest
 import com.github.jyc228.musinsa.domain.category.Category
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class StatisticsControllerTest : IntegrationTest() {
@@ -36,5 +36,22 @@ class StatisticsControllerTest : IntegrationTest() {
 
         val result = client.getBrandCheaperProduct()
         result.lowestPrice.brand shouldBe "AA"
+    }
+
+    @Test
+    fun `카테고리 이름으로 최소 가격, 최대 가격 상품을 찾을 수 있다`() {
+        listOf(
+            "DD" to (10..100),
+            "EE" to (1000..10000),
+            "FF" to (1000..10000)
+        ).forEach { (name, priceRange) ->
+            val brandId = client.createBrand(name)
+            Category.allIds.forEach { client.createProduct(brandId, it, priceRange.random().toBigInteger()) }
+        }
+
+        val result = client.getCategoryProduct("상의")
+        result.category shouldBe "상의"
+        result.lowestPrice.price shouldBeGreaterThan 0.toBigInteger()
+        result.lowestPrice.price shouldBeLessThan result.highestPrice.price
     }
 }

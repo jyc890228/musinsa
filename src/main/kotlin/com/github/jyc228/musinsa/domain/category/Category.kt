@@ -21,6 +21,8 @@ data class Category(
         val allIds = all.keys.toList()
 
         operator fun get(id: Int) = all[id]
+        operator fun get(name: String) = all.values.find { it.name == name }
+        fun getOrThrow(name: String) = get(name) ?: throw CategoryNotFoundException(name)
         fun throwIfNotExist(id: Int) {
             if (id !in all) throw CategoryNotFoundException(id)
         }

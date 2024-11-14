@@ -64,7 +64,7 @@ class ProductService(
         val product = repository.findByIdOrNull(pid) ?: throw ProductNotFoundException(pid)
         repository.delete(product)
         brandService.addProductCount(product.brandId, -1)
-        app.publishEvent(ProductEvent.Deleted(pid))
+        app.publishEvent(ProductEvent.Deleted(product))
     }
 
     fun findAllProductsByBrandId(brandId: Long): List<ProductEntity> = repository.findAllByBrandId(brandId)
