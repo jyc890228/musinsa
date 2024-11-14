@@ -1,7 +1,7 @@
 ## 실행
 
 ```shell
-./gradlew bootRun
+./gradlew bootRun --args='--spring.profiles.active=init-data'
 ```
 
 ## 빌드
