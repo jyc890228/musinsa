@@ -9,6 +9,7 @@ spring:
     properties:
       hibernate.highlight_sql: true
       hibernate.show_sql: true
+    open-in-view: false
   sql:
     init:
       schema-locations: classpath:schema.sql
