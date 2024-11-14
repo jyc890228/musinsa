@@ -29,6 +29,7 @@ api 실패 처리 : [MusinsaExceptionHandler.kt](src/main/kotlin/com/github/jyc2
 ### 구현 1) - 카테고리 별 최저가격 브랜드와 상품 가격, 총액을 조회하는 API
 
 - 상품이 없는 카테고리 요구사항이 없음 : 응답에 포함 안되도록 했습니다.
+- 동일 가격 상품 : 예제랑 동일하게 나오게 하기 위하여 뒤쪽에 배치된 브랜드 상품이 나오도록 했습니다.
 
 [StatisticsController.kt](src/main/kotlin/com/github/jyc228/musinsa/domain/statistics/StatisticsController.kt)
 `/api/statistics/category-cheaper-product`
