@@ -1,7 +1,0 @@
-spring:
-  jpa:
-    properties:
-      hibernate.highlight_sql: true
-  sql:
-    init:
-      mode: always

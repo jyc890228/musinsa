@@ -1,11 +1,9 @@
 package com.github.jyc228.musinsa.domain.product
 
 import com.github.jyc228.musinsa.IntegrationTest
-import com.github.jyc228.musinsa.MusinsaApiClient
 import com.github.jyc228.musinsa.domain.category.Category
 import com.github.jyc228.musinsa.shouldThrowResponseException
 import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test

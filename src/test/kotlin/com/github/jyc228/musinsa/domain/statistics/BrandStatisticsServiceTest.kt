@@ -7,14 +7,10 @@ import com.github.jyc228.musinsa.domain.product.ProductService
 import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 import kotlin.random.Random
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
-import org.mockito.BDDMockito.times
-import org.mockito.BDDMockito.verify
-import org.mockito.Mockito
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
 
 class BrandStatisticsServiceTest {
     private val database: StatisticsDatabase = mock()
