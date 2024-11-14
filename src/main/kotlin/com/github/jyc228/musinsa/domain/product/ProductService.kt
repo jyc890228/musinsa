@@ -3,8 +3,6 @@ package com.github.jyc228.musinsa.domain.product
 import com.github.jyc228.musinsa.InvalidRequestException
 import com.github.jyc228.musinsa.ProductNotFoundException
 import com.github.jyc228.musinsa.domain.brand.BrandService
-import com.github.jyc228.musinsa.domain.category.Category
-import java.math.BigInteger
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -18,10 +16,7 @@ class ProductService(
 ) {
     @Transactional
     fun createProduct(request: ProductController.UpsertProductRequest): ProductEntity {
-        if (request.price <= BigInteger.ZERO) {
-            throw InvalidRequestException(request.price, "invalid price")
-        }
-        Category.throwIfNotExist(request.categoryId)
+        request.throwIfInvalid()
         if (repository.existsByBrandIdAndCategoryId(request.brandId, request.categoryId)) {
             throw InvalidRequestException(request.brandId to request.categoryId, "product already exists")
         }
@@ -37,12 +32,9 @@ class ProductService(
 
     @Transactional
     fun updateProduct(request: ProductController.UpsertProductRequest, pid: Long) {
-        if (request.price <= BigInteger.ZERO) {
-            throw InvalidRequestException(request.price, "invalid price")
-        }
+        request.throwIfInvalid()
         val e = repository.findByIdOrNull(pid) ?: throw ProductNotFoundException(pid)
         if (e.categoryId != request.categoryId || e.brandId != request.brandId) {
-            if (e.categoryId != request.categoryId) Category.throwIfNotExist(request.categoryId)
             if (e.brandId != request.brandId) brandService.throwIfNotExist(request.brandId)
             if (repository.existsByBrandIdAndCategoryId(request.brandId, request.categoryId)) {
                 throw InvalidRequestException(request.brandId to request.categoryId, "product already exists")
