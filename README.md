@@ -55,6 +55,7 @@ api 실패 처리 : [MusinsaExceptionHandler.kt](src/main/kotlin/com/github/jyc2
 ### 구현 4) - 브랜드 및 상품을 추가 / 업데이트 / 삭제하는 API
 
 - 상품 수정 상세한 요구사항 없음 : 카테고리, 브랜드, 가격 전부 수정 가능하다고 보고 개발했습니다.
+- 상품 삭제 api 존재가 과제 사전 조건과 부합하지 않음 : `브랜드의 카테고리에는 1개의 상품은 존재함` 사전조건과 모순된다고 생각했습니다. 구현 요구사항을 더 높은 우선순위로 보고 개발했습니다.
 
 [BrandController.kt](src/main/kotlin/com/github/jyc228/musinsa/domain/brand/BrandController.kt)
 [ProductController.kt](src/main/kotlin/com/github/jyc228/musinsa/domain/product/ProductController.kt)
