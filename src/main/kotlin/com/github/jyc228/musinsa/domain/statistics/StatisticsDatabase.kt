@@ -20,7 +20,7 @@ class StatisticsDatabase(private val em: EntityManager) {
         ).setParameter("categoryId", categoryId).resultList.getOrNull(0)
     }
 
-    fun findCheaperBrandId(): Long? {
+    fun findLowestPriceBrandId(): Long? {
         return em.createQuery(
             """
                 SELECT p.brandId 

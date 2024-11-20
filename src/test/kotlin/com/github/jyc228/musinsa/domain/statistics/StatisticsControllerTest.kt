@@ -18,7 +18,7 @@ class StatisticsControllerTest : IntegrationTest() {
             .map { Triple(it.first, it.second, Random.nextInt(1000, 100000).toBigInteger()) }
             .forEach { (brandId, categoryId, price) -> client.createProduct(brandId, categoryId, price) }
 
-        val result = client.getCategoryCheaperProduct()
+        val result = client.getLowestPriceCategoryProduct()
         result.data shouldHaveSize 8
         result.totalPrice shouldBeGreaterThan 0.toBigInteger()
     }
@@ -34,7 +34,7 @@ class StatisticsControllerTest : IntegrationTest() {
             Category.allIds.forEach { client.createProduct(brandId, it, priceRange.random().toBigInteger()) }
         }
 
-        val result = client.getBrandCheaperProduct()
+        val result = client.getLowestPriceBrandProduct()
         result.lowestPrice.brand shouldBe "AA"
     }
 

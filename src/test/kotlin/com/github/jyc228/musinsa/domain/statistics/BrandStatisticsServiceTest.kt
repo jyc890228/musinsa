@@ -28,7 +28,7 @@ class BrandStatisticsServiceTest {
     fun `새로운 상품 등록시, 등록된 브랜드의 상품 개수가 8개 이하인 경우 아무것도 하지 않는다`() {
         service.fireCreatedEvent(product(2, 1, 100))
 
-        service.getCheaperBrandProduct()?.first shouldBe 1
+        service.getLowestPriceBrandProduct()?.first shouldBe 1
     }
 
     @Test
@@ -36,30 +36,30 @@ class BrandStatisticsServiceTest {
         val products = Category.allIds.map { product(3, it, it * 10) }
         products.forEachIndexed { i, e ->
             given(productService.findAllProductsByBrandId(3)).willReturn(products.take(i + 1))
-            if (i == 7) given(database.findCheaperBrandId()).willReturn(3)
+            if (i == 7) given(database.findLowestPriceBrandId()).willReturn(3)
             service.fireCreatedEvent(e)
         }
 
-        val result = service.getCheaperBrandProduct()
+        val result = service.getLowestPriceBrandProduct()
         result?.first shouldBe 3
         result?.second?.totalPrice shouldBe products.totalPrice
     }
 
     @Test
     fun `상품 브랜드 수정시, 무조건 갱신`() {
-        given(database.findCheaperBrandId()).willReturn(555)
+        given(database.findLowestPriceBrandId()).willReturn(555)
         given(productService.findAllProductsByBrandId(555))
             .willReturn(Category.allIds.map { product(555, it, it * 10) })
 
         service.fireUpdatedEvent(products[1], products[1].copy(brandId = 999))
-        service.getCheaperBrandProduct()?.first shouldBe 555
+        service.getLowestPriceBrandProduct()?.first shouldBe 555
     }
 
     @Test
     fun `상품 카테고리 수정시, 아무것도 안함`() {
         service.fireUpdatedEvent(product(23, 1, 100), product(23, 4, 100))
 
-        service.getCheaperBrandProduct()?.first shouldBe 1
+        service.getLowestPriceBrandProduct()?.first shouldBe 1
     }
 
     @Test
@@ -68,9 +68,9 @@ class BrandStatisticsServiceTest {
             product(23, 1, 100),
             product(23, 1, 200)
         )
-        service.getCheaperBrandProduct()?.first shouldBe 1
+        service.getLowestPriceBrandProduct()?.first shouldBe 1
 
-        given(database.findCheaperBrandId()).willReturn(2)
+        given(database.findLowestPriceBrandId()).willReturn(2)
         given(productService.findAllProductsByBrandId(2))
             .willReturn(Category.allIds.map { product(2, it, it * 10) })
 
@@ -78,7 +78,7 @@ class BrandStatisticsServiceTest {
             product(23, 1, 200),
             product(23, 1, 50)
         )
-        service.getCheaperBrandProduct()?.first shouldBe 2
+        service.getLowestPriceBrandProduct()?.first shouldBe 2
     }
 
     @Test
@@ -87,23 +87,23 @@ class BrandStatisticsServiceTest {
             products[0],
             products[0].copy(price = products[0].price - 10.toBigInteger())
         )
-        service.getCheaperBrandProduct().let {
+        service.getLowestPriceBrandProduct().let {
             it?.first shouldBe 1
             it?.second?.totalPrice shouldBe products.totalPrice - 10.toBigInteger()
         }
 
-        given(database.findCheaperBrandId()).willReturn(99)
+        given(database.findLowestPriceBrandId()).willReturn(99)
         given(productService.findAllProductsByBrandId(99))
             .willReturn(Category.allIds.map { product(99, it, it * 10) })
         service.fireUpdatedEvent(
             products[0],
             products[0].copy(price = products[0].price + 10.toBigInteger())
         )
-        service.getCheaperBrandProduct()?.first shouldBe 99
+        service.getLowestPriceBrandProduct()?.first shouldBe 99
     }
 
     private fun prepareTest() {
-        given(database.findCheaperBrandId()).willReturn(1)
+        given(database.findLowestPriceBrandId()).willReturn(1)
         given(productService.findAllProductsByBrandId(1)).willReturn(products)
         service.fireUpdate()
     }

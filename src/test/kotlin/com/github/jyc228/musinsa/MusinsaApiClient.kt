@@ -65,12 +65,12 @@ class MusinsaApiClient(url: String) {
         http.get("/api/statistics/category-product/${categoryName.encodeURLParameter()}").throwIfFail().body()
     }
 
-    fun getCategoryCheaperProduct(): StatisticsController.CategoryCheaperProductResponse = runBlocking {
-        http.get("/api/statistics/category-cheaper-product").throwIfFail().body()
+    fun getLowestPriceCategoryProduct(): StatisticsController.LowestPriceCategoryProductResponse = runBlocking {
+        http.get("/api/statistics/lowest-price-category-product").throwIfFail().body()
     }
 
-    fun getBrandCheaperProduct(): StatisticsController.BrandCheaperProductResponse = runBlocking {
-        http.get("/api/statistics/brand-cheaper-product").throwIfFail().body()
+    fun getLowestPriceBrandProduct(): StatisticsController.LowestPriceBrandProductResponse = runBlocking {
+        http.get("/api/statistics/lowest-price-brand-product").throwIfFail().body()
     }
 
     private suspend fun HttpResponse.throwIfFail(): HttpResponse {

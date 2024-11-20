@@ -12,17 +12,18 @@ class BrandStatisticsService(
     private val database: StatisticsDatabase,
     private val productService: ProductService
 ) {
-    private var cheaperBrandProducts = mutableMapOf<Long, ProductEntity>()
+    private var lowestPriceBrandProductByPid = mutableMapOf<Long, ProductEntity>()
 
-    fun getCheaperBrandProduct(): Pair<Long, List<ProductEntity>>? {
-        val brandId = cheaperBrandProducts.values.firstOrNull()?.brandId ?: return null
-        return brandId to cheaperBrandProducts.values.toList()
+    fun getLowestPriceBrandProduct(): Pair<Long, List<ProductEntity>>? {
+        val brandId = lowestPriceBrandProductByPid.values.firstOrNull()?.brandId ?: return null
+        return brandId to lowestPriceBrandProductByPid.values.toList()
     }
 
     @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60)
     protected fun update() {
-        val brandId = database.findCheaperBrandId() ?: return cheaperBrandProducts.clear()
-        cheaperBrandProducts = productService.findAllProductsByBrandId(brandId).associateBy { it.id }.toMutableMap()
+        val brandId = database.findLowestPriceBrandId() ?: return lowestPriceBrandProductByPid.clear()
+        lowestPriceBrandProductByPid =
+            productService.findAllProductsByBrandId(brandId).associateBy { it.id }.toMutableMap()
     }
 
     @EventListener(ProductEvent::class)
@@ -39,13 +40,13 @@ class BrandStatisticsService(
      */
     private fun handleCreated(newProduct: ProductEntity) {
         val products = productService.findAllProductsByBrandId(newProduct.brandId)
-        if (cheaperBrandProducts.isEmpty() && products.size == 8) {
-            cheaperBrandProducts = products.associateBy { it.id }.toMutableMap()
+        if (lowestPriceBrandProductByPid.isEmpty() && products.size == 8) {
+            lowestPriceBrandProductByPid = products.associateBy { it.id }.toMutableMap()
             return
         }
-        if (products.size != cheaperBrandProducts.size) return
-        if (products.sumOf { it.price } < cheaperBrandProducts.values.sumOf { it.price }) {
-            cheaperBrandProducts = products.associateBy { it.id }.toMutableMap()
+        if (products.size != lowestPriceBrandProductByPid.size) return
+        if (products.sumOf { it.price } < lowestPriceBrandProductByPid.values.sumOf { it.price }) {
+            lowestPriceBrandProductByPid = products.associateBy { it.id }.toMutableMap()
         }
     }
 
@@ -58,14 +59,14 @@ class BrandStatisticsService(
         if (prev.categoryId != next.categoryId) {
             return // 브랜드는 동일한 상태에서 카테고리 변경됨. 모든 카테고리에 상품이 없다는 의미이므로 갱신 안함
         }
-        val cheaperProduct = cheaperBrandProducts[next.id]
-        if (cheaperProduct == null) {
+        val lowestPriceProduct = lowestPriceBrandProductByPid[next.id]
+        if (lowestPriceProduct == null) {
             if (prev.price < next.price) return // 기존 싼 상품 아닌데 가격 올림. 갱신 안함
             return update()
         }
-        if (cheaperProduct.price < next.price) {
+        if (lowestPriceProduct.price < next.price) {
             return update() // 기존 싼 상품 가격 상승. 갱신
         }
-        cheaperBrandProducts[next.id] = next // 기존 싼 상품 가격 하락
+        lowestPriceBrandProductByPid[next.id] = next // 기존 싼 상품 가격 하락
     }
 }

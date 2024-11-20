@@ -26,7 +26,7 @@ class CategoryStatisticsService(
         return Pair(price.minEntity ?: return null, price.maxEntity ?: return null)
     }
 
-    fun getCategoryCheaperProduct(): List<ProductEntity> {
+    fun getLowestPriceCategoryProduct(): List<ProductEntity> {
         return priceByCid.values.mapNotNull { it.minEntity }.sortedBy { it.categoryId }
     }
 

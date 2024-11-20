@@ -36,14 +36,14 @@ api 실패 처리 : [MusinsaExceptionHandler.kt](src/main/kotlin/com/github/jyc2
 - 동일 가격 상품 : 예제랑 동일하게 나오게 하기 위하여 뒤쪽에 배치된 브랜드 상품이 나오도록 했습니다.
 
 [StatisticsController.kt](src/main/kotlin/com/github/jyc228/musinsa/domain/statistics/StatisticsController.kt)
-`/api/statistics/category-cheaper-product`
+`/api/statistics/lowest-price-category-product`
 
 ### 구현 2) - 단일 브랜드로 모든 카테고리 상품을 구매할 때 최저가격에 판매하는 브랜드와 카테고리의 상품가격, 총액을 조회하는 API
 
 - 상품이 없는 카테고리 요구사항이 없음 : 모든 카테고리가 있는 브랜드만 최저 가격 계산했습니다.
 
 [StatisticsController.kt](src/main/kotlin/com/github/jyc228/musinsa/domain/statistics/StatisticsController.kt)
-`/api/statistics/brand-cheaper-product`
+`/api/statistics/lowest-price-brand-product`
 
 ### 구현 3) - 카테고리 이름으로 최저, 최고 가격 브랜드와 상품 가격을 조회하는 API
 

@@ -30,14 +30,14 @@ class StatisticsController(
     }
 
 
-    @GetMapping("/api/statistics/category-cheaper-product")
-    fun getCategoryCheaperProduct(): CategoryCheaperProductResponse {
-        val products = categoryStatisticsService.getCategoryCheaperProduct()
+    @GetMapping("/api/statistics/lowest-price-category-product")
+    fun getLowestPriceCategoryProduct(): LowestPriceCategoryProductResponse {
+        val products = categoryStatisticsService.getLowestPriceCategoryProduct()
         val brandById = brandService.findAllById(products.map { it.brandId }.toSet()).associateBy { it.id }
 
-        return CategoryCheaperProductResponse(
+        return LowestPriceCategoryProductResponse(
             data = products.map {
-                CategoryCheaperProductResponse.Element(
+                LowestPriceCategoryProductResponse.Element(
                     category = Category[it.categoryId]?.name ?: "Unknown Category",
                     brand = brandById[it.brandId]?.name ?: "Unknown Brand",
                     price = it.price,
@@ -47,16 +47,16 @@ class StatisticsController(
         )
     }
 
-    @GetMapping("/api/statistics/brand-cheaper-product")
-    fun getBrandCheaperProduct(): BrandCheaperProductResponse {
-        val (brandId, products) = brandStatisticsService.getCheaperBrandProduct()
-            ?: throw StatisticsException("cheaper brand products not exist")
+    @GetMapping("/api/statistics/lowest-price-brand-product")
+    fun getLowestPriceBrandProduct(): LowestPriceBrandProductResponse {
+        val (brandId, products) = brandStatisticsService.getLowestPriceBrandProduct()
+            ?: throw StatisticsException("lowest price brand products not exist")
         val brand = brandService.findByIdOrNull(brandId) ?: throw StatisticsException("brand not exist", brandId)
-        return BrandCheaperProductResponse(
-            lowestPrice = BrandCheaperProductResponse.LowestPriceData(
+        return LowestPriceBrandProductResponse(
+            lowestPrice = LowestPriceBrandProductResponse.LowestPriceData(
                 brand = brand.name,
                 category = products.map {
-                    BrandCheaperProductResponse.Category(
+                    LowestPriceBrandProductResponse.Category(
                         category = Category[it.categoryId]?.name ?: "Unknown Category",
                         price = it.price,
                     )
@@ -81,14 +81,14 @@ class StatisticsController(
         }
     }
 
-    data class CategoryCheaperProductResponse(
+    data class LowestPriceCategoryProductResponse(
         val data: List<Element>,
         val totalPrice: BigInteger,
     ) {
         data class Element(val category: String, val brand: String, val price: BigInteger)
     }
 
-    data class BrandCheaperProductResponse(val lowestPrice: LowestPriceData) {
+    data class LowestPriceBrandProductResponse(val lowestPrice: LowestPriceData) {
         data class LowestPriceData(
             val brand: String,
             val category: List<Category>,

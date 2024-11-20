@@ -49,6 +49,6 @@ class StatisticsDatabaseTest {
         }
 
         val db = StatisticsDatabase(em.entityManager)
-        db.findCheaperBrandId() shouldBe brandWithPriceRanges[2].first.id
+        db.findLowestPriceBrandId() shouldBe brandWithPriceRanges[2].first.id
     }
 }

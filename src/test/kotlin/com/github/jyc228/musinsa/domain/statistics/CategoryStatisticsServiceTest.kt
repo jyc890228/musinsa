@@ -31,7 +31,7 @@ class CategoryStatisticsServiceTest {
     fun `새롭게 등록된 상품이 기존 min, max 가격 범위 밖이면 갱신`() {
         service.fireCreatedEvent(product(6, 3, 100))
 
-        service.getCategoryCheaperProduct().groupBy { it.categoryId }.let {
+        service.getLowestPriceCategoryProduct().groupBy { it.categoryId }.let {
             it shouldHaveSize 5
             it[3]?.single()?.price shouldBe 100.toBigInteger()
             it[5]?.single()?.price shouldBe 500.toBigInteger()
@@ -46,7 +46,7 @@ class CategoryStatisticsServiceTest {
     fun `새롭게 등록된 상품이 기존 min, max 가격 범위 안에 있으면 갱신 안함`() {
         service.fireCreatedEvent(product(6, 3, 1000))
 
-        val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
+        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
         result shouldHaveSize 5
         result[3]?.single()?.price shouldBe 300.toBigInteger()
         service.getCategoryMinMaxProduct(3)?.toPricePair() shouldBe (300.toBigInteger() to (300 * 100).toBigInteger())
@@ -57,7 +57,7 @@ class CategoryStatisticsServiceTest {
         val product = products.random()
 
         service.fireUpdatedEvent(product, product.copy(price = product.price / 2.toBigInteger()))
-        val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
+        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 5
         result[product.categoryId]?.single()?.price shouldBe product.price / 2.toBigInteger()
@@ -70,7 +70,7 @@ class CategoryStatisticsServiceTest {
         given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(dbProduct)
 
         service.fireUpdatedEvent(product, product.copy(price = product.price + 10000.toBigInteger()))
-        val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
+        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 5
         result[product.categoryId]?.single().let {
@@ -99,7 +99,7 @@ class CategoryStatisticsServiceTest {
         given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(dbProduct)
 
         service.fireUpdatedEvent(product, product.copy(categoryId = newCategory))
-        val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
+        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 6
         result[product.categoryId]?.single().let {
@@ -119,7 +119,7 @@ class CategoryStatisticsServiceTest {
         given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(dbProduct)
 
         service.fireDeletedEvent(product)
-        val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
+        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 5
         result[product.categoryId]?.single().let {
@@ -134,7 +134,7 @@ class CategoryStatisticsServiceTest {
         given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(null)
 
         service.fireDeletedEvent(product)
-        val result = service.getCategoryCheaperProduct().groupBy { it.categoryId }
+        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
 
         result shouldHaveSize 4
         result[product.categoryId] shouldBe null
