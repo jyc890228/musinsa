@@ -33,20 +33,20 @@ class CategoryStatisticsService(
 
     @Scheduled(initialDelay = 0, fixedDelay = 1000 * 60)
     protected fun update() {
-        priceByCid = Category.allIds
-            .mapNotNull {
-                val min = database.findLowestPriceProductByCategoryId(it) ?: return@mapNotNull null
-                val max = database.findHighestPriceProductByCategoryId(it)
-                it to Price(min, max ?: min)
-            }
-            .associateBy({ it.first }, { it.second })
-            .toMutableMap()
+        Category.allIds.forEach {
+            priceByCid[it] = Price(
+                minEntity = database.findLowestPriceProductByCategoryId(it),
+                maxEntity = database.findHighestPriceProductByCategoryId(it)
+            )
+        }
     }
 
     @EventListener(ProductEvent::class)
     protected fun listen(e: ProductEvent) {
         when (e) {
-            is ProductEvent.Created -> priceByCid.getOrPut(e.entity.categoryId) { Price(e.entity) }.update(e.entity)
+            is ProductEvent.Created -> priceByCid.getOrPut(e.entity.categoryId) { Price(e.entity) }
+                .updateIfExceed(e.entity)
+
             is ProductEvent.Updated -> handleUpdated(e.prev, e.next)
             is ProductEvent.Deleted -> priceByCid[e.entity.categoryId]?.refreshIfBoundary(e.entity, database)
         }
@@ -60,7 +60,7 @@ class CategoryStatisticsService(
         // 신규 카테고리에서 min, max 를 초과한 경우 -> event 데이터로 신규 min, max 갱신
         if (prev.categoryId != next.categoryId) {
             priceByCid[prev.categoryId]?.refreshIfBoundary(prev, database)
-            priceByCid.getOrPut(next.categoryId) { Price(next) }.update(next)
+            priceByCid.getOrPut(next.categoryId) { Price(next) }.updateIfExceed(next)
             return
         }
 
@@ -69,7 +69,7 @@ class CategoryStatisticsService(
         // 변경전 가격이 min, max -> db 데이터로 min, max 갱신
         if (prev.price != next.price) {
             val price = priceByCid.getOrPut(next.categoryId) { Price(next) }
-            price.update(next)
+            price.updateIfExceed(next)
             price.refreshIfBoundary(prev, database)
             return
         }
@@ -82,7 +82,7 @@ class CategoryStatisticsService(
         val max get() = maxEntity?.price
 
         /** [product] 가격이 [min]..[max] 범위 밖에 있으면 갱신한다. */
-        fun update(product: ProductEntity) {
+        fun updateIfExceed(product: ProductEntity) {
             // min, max 가 둘 다 null 인 경우, db 데이터가 없다고 간주한다
             if (min == null || product.price < min)
                 minEntity = product
