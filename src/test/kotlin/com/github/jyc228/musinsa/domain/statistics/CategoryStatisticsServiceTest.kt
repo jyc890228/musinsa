@@ -2,7 +2,7 @@ package com.github.jyc228.musinsa.domain.statistics
 
 import com.github.jyc228.musinsa.domain.product.ProductEntity
 import com.github.jyc228.musinsa.domain.product.ProductEvent
-import io.kotest.matchers.maps.shouldHaveSize
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import org.junit.jupiter.api.BeforeEach
@@ -14,144 +14,130 @@ class CategoryStatisticsServiceTest {
     private val database: StatisticsDatabase = mock()
 
     private val service = TestCategoryStatisticsService()
-    private val products = listOf(
-        product(1, 1, 100),
-        product(1, 2, 200),
-        product(1, 3, 300),
-        product(1, 4, 400),
-        product(1, 5, 500),
-    )
+    private val minPriceProducts = mutableMapOf<Int, ProductEntity>()
 
     @BeforeEach
     fun setup() {
-        prepareTest()
+        mockProduct(categoryId = 1, min = 100, max = 1000)
+        mockProduct(categoryId = 2, min = 200, max = 2000)
+        mockProduct(categoryId = 3, min = 300, max = 3000)
+        mockProduct(categoryId = 4, min = 400, max = 4000)
+        mockProduct(categoryId = 5, min = 500, max = 5000)
+        service.fireUpdate()
     }
 
     @Test
     fun `새롭게 등록된 상품이 기존 min, max 가격 범위 밖이면 갱신`() {
-        service.fireCreatedEvent(product(6, 3, 100))
+        val newMin = product(categoryId = 3, price = 100)
+        val newMax = product(categoryId = 3, price = 20000000)
 
-        service.getLowestPriceCategoryProduct().groupBy { it.categoryId }.let {
-            it shouldHaveSize 5
-            it[3]?.single()?.price shouldBe 100.toBigInteger()
-            it[5]?.single()?.price shouldBe 500.toBigInteger()
-        }
+        service.fireCreatedEvent(newMin)
+        service.getLowestPriceCategoryProduct() shouldContainAll minPriceProducts.toExpected(newMin)
 
-        service.fireCreatedEvent(product(6, 3, 20000000))
-
-        service.getCategoryMinMaxProduct(3)?.toPricePair() shouldBe (100.toBigInteger() to 20000000.toBigInteger())
+        service.fireCreatedEvent(newMax)
+        service.getCategoryMinMaxProduct(3)?.toPricePair() shouldBe (100 to 20000000)
     }
 
     @Test
     fun `새롭게 등록된 상품이 기존 min, max 가격 범위 안에 있으면 갱신 안함`() {
-        service.fireCreatedEvent(product(6, 3, 1000))
+        val new = product(categoryId = 3, price = 1000)
 
-        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
-        result shouldHaveSize 5
-        result[3]?.single()?.price shouldBe 300.toBigInteger()
-        service.getCategoryMinMaxProduct(3)?.toPricePair() shouldBe (300.toBigInteger() to (300 * 100).toBigInteger())
+        service.fireCreatedEvent(new)
+
+        service.getLowestPriceCategoryProduct() shouldContainAll minPriceProducts.toExpected()
+        service.getCategoryMinMaxProduct(3)?.toPricePair() shouldBe (300 to 3000)
     }
 
     @Test
     fun `제일싼 상품의 가격을 낮춘 경우 갱신`() {
-        val product = products.random()
+        val prev = minPriceProducts.getByCategoryId(2)
+        val next = prev.copy(price = 100.toBigInteger())
 
-        service.fireUpdatedEvent(product, product.copy(price = product.price / 2.toBigInteger()))
-        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
+        service.fireUpdatedEvent(prev, next)
 
-        result shouldHaveSize 5
-        result[product.categoryId]?.single()?.price shouldBe product.price / 2.toBigInteger()
+        service.getLowestPriceCategoryProduct() shouldContainAll minPriceProducts.toExpected(next)
     }
 
     @Test
     fun `제일싼 상품의 가격을 올린 경우 db 데이터로 갱신`() {
-        val product = products.random()
-        val dbProduct = product(2, product.categoryId, product.price.toInt() + 100)
-        given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(dbProduct)
+        val dbData = product(4, 420)
+        given(database.findLowestPriceProductByCategoryId(dbData.categoryId)).willReturn(dbData)
 
-        service.fireUpdatedEvent(product, product.copy(price = product.price + 10000.toBigInteger()))
-        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
+        val prev = minPriceProducts.getByCategoryId(4)
+        val next = prev.copy(price = 430.toBigInteger())
+        service.fireUpdatedEvent(prev, next)
 
-        result shouldHaveSize 5
-        result[product.categoryId]?.single().let {
-            it?.id shouldBe dbProduct.id
-            it?.price shouldBe dbProduct.price
-        }
+        service.getLowestPriceCategoryProduct() shouldContainAll minPriceProducts.toExpected(dbData)
     }
 
     @Test
     fun `제일싼 상품의 가격을 제일 비싸게 갱신한 경우`() {
-        val product = products.random()
-        given(database.findLowestPriceProductByCategoryId(product.categoryId))
-            .willReturn(product.copy(price = product.price + 100.toBigInteger()))
+        val dbData = product(5, 720)
+        given(database.findLowestPriceProductByCategoryId(dbData.categoryId)).willReturn(dbData)
 
-        service.fireUpdatedEvent(product, product.copy(price = product.price + 10000000.toBigInteger()))
-        val result = service.getCategoryMinMaxProduct(product.categoryId)
+        val prev = minPriceProducts.getByCategoryId(5)
+        val next = prev.copy(price = 6000.toBigInteger())
+        service.fireUpdatedEvent(prev, next)
 
-        result?.toPricePair() shouldBe (product.price + 100.toBigInteger() to product.price + 10000000.toBigInteger())
+        service.getCategoryMinMaxProduct(5)?.toPricePair() shouldBe (720 to 6000)
     }
 
     @Test
     fun `카테고리 변경하면 기존 카테고리는 db 데이터로 갱신`() {
-        val newCategory = 7
-        val product = products.random()
-        val dbProduct = product(2, product.categoryId, product.price.toInt() + 100)
-        given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(dbProduct)
+        val dbData = product(1, 150)
+        given(database.findLowestPriceProductByCategoryId(dbData.categoryId)).willReturn(dbData)
 
-        service.fireUpdatedEvent(product, product.copy(categoryId = newCategory))
-        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
+        val prev = minPriceProducts.getByCategoryId(1)
+        val next = prev.copy(categoryId = 7)
+        service.fireUpdatedEvent(prev, next)
 
-        result shouldHaveSize 6
-        result[product.categoryId]?.single().let {
-            it?.id shouldBe dbProduct.id
-            it?.price shouldBe dbProduct.price
-        }
-        result[newCategory]?.single().let {
-            it?.id shouldBe product.id
-            it?.price shouldBe product.price
-        }
+        service.getLowestPriceCategoryProduct() shouldContainAll minPriceProducts.toExpected(dbData, next)
     }
 
     @Test
     fun `상품 삭제하면 해당 카테고리 db 데이터로 갱신`() {
-        val product = products.random()
-        val dbProduct = product(2, product.categoryId, product.price.toInt() + 100)
-        given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(dbProduct)
+        val dbData = product(2, 270)
+        given(database.findLowestPriceProductByCategoryId(dbData.categoryId)).willReturn(dbData)
 
-        service.fireDeletedEvent(product)
-        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
+        service.fireDeletedEvent(minPriceProducts.getByCategoryId(2))
 
-        result shouldHaveSize 5
-        result[product.categoryId]?.single().let {
-            it?.id shouldBe dbProduct.id
-            it?.price shouldBe dbProduct.price
-        }
+        service.getLowestPriceCategoryProduct() shouldContainAll minPriceProducts.toExpected(dbData)
     }
 
     @Test
     fun `상품 삭제했는데 db 에서 조회된 싼 상품이 없으면 삭제`() {
-        val product = products.random()
-        given(database.findLowestPriceProductByCategoryId(product.categoryId)).willReturn(null)
+        given(database.findLowestPriceProductByCategoryId(2)).willReturn(null)
 
-        service.fireDeletedEvent(product)
-        val result = service.getLowestPriceCategoryProduct().groupBy { it.categoryId }
+        service.fireDeletedEvent(minPriceProducts.getByCategoryId(2))
 
-        result shouldHaveSize 4
-        result[product.categoryId] shouldBe null
+        val expected = minPriceProducts.toExpected().apply { removeIf { it.categoryId == 2 } shouldBe true }
+        service.getLowestPriceCategoryProduct() shouldContainAll expected
     }
 
-    private fun prepareTest() {
-        products.onEach {
-            given(database.findLowestPriceProductByCategoryId(it.categoryId)).willReturn(it)
-            given(database.findHighestPriceProductByCategoryId(it.categoryId)).willReturn(it.copy(price = it.price * 100.toBigInteger()))
+    private fun Map<Int, ProductEntity>.getByCategoryId(cid: Int): ProductEntity = values.first { it.categoryId == cid }
+
+    private fun Map<Int, ProductEntity>.toExpected(vararg products: ProductEntity): MutableList<ProductEntity> {
+        val copy = toMutableMap()
+        products.forEach { copy[it.categoryId] = it }
+        return copy.values.sortedBy { it.categoryId }.toMutableList()
+    }
+
+    private fun mockProduct(categoryId: Int, min: Int?, max: Int?) {
+        min?.let {
+            val product = product(categoryId, it)
+            given(database.findLowestPriceProductByCategoryId(categoryId)).willReturn(product)
+            minPriceProducts[categoryId] = product
         }
-        service.fireUpdate()
+        max?.let {
+            val product = product(categoryId, it)
+            given(database.findHighestPriceProductByCategoryId(categoryId)).willReturn(product)
+        }
     }
 
-    private fun product(brandId: Long, categoryId: Int, price: Int) =
-        ProductEntity(Random.nextLong(), brandId, categoryId, price.toBigInteger())
+    private fun product(categoryId: Int, price: Int) =
+        ProductEntity(Random.nextLong(), Random.nextLong(), categoryId, price.toBigInteger())
 
-    private fun Pair<ProductEntity, ProductEntity>.toPricePair() = Pair(first.price, second.price)
+    private fun Pair<ProductEntity, ProductEntity>.toPricePair() = Pair(first.price.toInt(), second.price.toInt())
 
     inner class TestCategoryStatisticsService : CategoryStatisticsService(database) {
         fun fireUpdate() = super.update()
