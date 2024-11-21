@@ -114,6 +114,34 @@ class CategoryStatisticsServiceTest {
         service.getLowestPriceCategoryProduct() shouldContainAll expected
     }
 
+    @Test
+    fun `상품이 없는 카테고리에서 이벤트 발생`() {
+        val new = product(8, 10)
+
+        service.fireCreatedEvent(new)
+        service.getCategoryMinMaxProduct(8)?.toPricePair() shouldBe (10 to 10)
+
+        // 카테고리에 상품이 한개 있는 상태에서 가격 수정 -> min, max 같이 갱신
+        val nextPriceUp = new.copy(price = 20.toBigInteger())
+        given(database.findLowestPriceProductByCategoryId(8)).willReturn(nextPriceUp)
+        service.fireUpdatedEvent(new, nextPriceUp)
+        service.getCategoryMinMaxProduct(8)?.toPricePair() shouldBe (20 to 20)
+
+        // 카테고리에 상품이 한개 있는 상태에서 가격 수정 -> min, max 같이 갱신
+        val nextPriceDown = new.copy(price = 15.toBigInteger())
+        given(database.findHighestPriceProductByCategoryId(8)).willReturn(nextPriceDown)
+        service.fireUpdatedEvent(nextPriceUp, nextPriceDown)
+        service.getCategoryMinMaxProduct(8)?.toPricePair() shouldBe (15 to 15)
+
+        given(database.findLowestPriceProductByCategoryId(8)).willReturn(null)
+        service.fireDeletedEvent(nextPriceDown)
+        service.getCategoryMinMaxProduct(8)?.toPricePair() shouldBe null
+        service.getLowestPriceCategoryProduct().find { it.categoryId == 8 } shouldBe null
+
+        service.fireCreatedEvent(new)
+        service.getCategoryMinMaxProduct(8)?.toPricePair() shouldBe (10 to 10)
+    }
+
     private fun Map<Int, ProductEntity>.getByCategoryId(cid: Int): ProductEntity = values.first { it.categoryId == cid }
 
     private fun Map<Int, ProductEntity>.toExpected(vararg products: ProductEntity): MutableList<ProductEntity> {

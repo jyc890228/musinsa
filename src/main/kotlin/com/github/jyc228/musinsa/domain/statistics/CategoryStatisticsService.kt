@@ -4,6 +4,7 @@ import com.github.jyc228.musinsa.domain.category.Category
 import com.github.jyc228.musinsa.domain.product.ProductEntity
 import com.github.jyc228.musinsa.domain.product.ProductEvent
 import com.github.jyc228.musinsa.domain.statistics.CategoryStatisticsService.Price
+import java.math.BigInteger
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -82,18 +83,24 @@ class CategoryStatisticsService(
 
         /** [product] 가격이 [min]..[max] 범위 밖에 있으면 갱신한다. */
         fun update(product: ProductEntity) {
-            when {
-                min == null || product.price < min -> minEntity = product
-                max == null || max!! < product.price -> maxEntity = product
-            }
+            // min, max 가 둘 다 null 인 경우, db 데이터가 없다고 간주한다
+            if (min == null || product.price < min)
+                minEntity = product
+            if (max == null || (max ?: BigInteger.ZERO) < product.price)
+                maxEntity = product
         }
 
         /** [product] 가격이 [min], [max] 와 동일한 경우, db 값으로 갱신한다. */
         fun refreshIfBoundary(product: ProductEntity, database: StatisticsDatabase) {
-            when (product.price) {
-                min -> minEntity = database.findLowestPriceProductByCategoryId(product.categoryId)
-                max -> maxEntity = database.findHighestPriceProductByCategoryId(product.categoryId)
-            }
+            // min, max 가 같은 경우, 똑같은 가격 상품이 여러개 일 가능성도 있으므로 둘 다 갱신해야 한다.
+            // 그러나 min 을 갱신했는데 null 인 경우, db 데이터가 없다고 봐도 무방하기 때문에 max 도 null 로 갱신한다.
+            if (product.price == min)
+                minEntity = database.findLowestPriceProductByCategoryId(product.categoryId)
+            if (product.price == max)
+                maxEntity = when (min == null) {
+                    true -> null
+                    false -> database.findHighestPriceProductByCategoryId(product.categoryId)
+                }
         }
     }
 }
