@@ -26,15 +26,6 @@ class BrandRepositoryTest {
     }
 
     @Test
-    fun `removeById`() {
-        val brand = repository.save(BrandEntity(name = "test-2"))
-        em.clear()
-
-        repository.removeById(brand.id)
-        em.flush()
-    }
-
-    @Test
     fun `addProductCount`() {
         val brand = repository.save(BrandEntity(name = "test-3"))
         em.clear()

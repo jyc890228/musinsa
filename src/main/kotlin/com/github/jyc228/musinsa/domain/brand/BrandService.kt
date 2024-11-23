@@ -1,8 +1,10 @@
 package com.github.jyc228.musinsa.domain.brand
 
 import com.github.jyc228.musinsa.BrandNotFoundException
+import com.github.jyc228.musinsa.InvalidRequestException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class BrandService(
@@ -16,8 +18,11 @@ class BrandService(
         if (repository.updateNameById(request.name, id) == 0) throw BrandNotFoundException(id)
     }
 
+    @Transactional
     fun deleteBrand(id: Long) {
-        if (repository.removeById(id) == 0) throw BrandNotFoundException(id)
+        val brand = repository.findByIdOrNull(id) ?: throw BrandNotFoundException(id)
+        if (brand.productCount > 0) throw InvalidRequestException(brand.productCount, "undeleted product exists")
+        repository.delete(brand)
     }
 
     fun throwIfNotExist(id: Long) {
