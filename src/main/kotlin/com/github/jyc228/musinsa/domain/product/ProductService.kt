@@ -52,6 +52,7 @@ class ProductService(
         app.publishEvent(ProductEvent.Updated(prev, e))
     }
 
+    @Transactional
     fun deleteProduct(pid: Long) {
         val product = repository.findByIdOrNull(pid) ?: throw ProductNotFoundException(pid)
         repository.delete(product)
